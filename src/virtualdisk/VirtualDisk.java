@@ -1,5 +1,6 @@
 package virtualdisk;
-/*
+
+/**
  * VirtualDisk.java
  *
  * A virtual asynchronous disk.
@@ -9,22 +10,25 @@ package virtualdisk;
 import java.io.RandomAccessFile;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayDeque;
+import java.util.Queue;
 
 import common.Constants;
 import common.Constants.DiskOperationType;
 import dblockcache.DBuffer;
 
-public abstract class VirtualDisk implements IVirtualDisk {
+public class VirtualDisk implements IVirtualDisk, Runnable {
 
 	private String _volName;
 	private RandomAccessFile _file;
 	private int _maxVolSize;
+	private Queue<Request> _queue;
+	private boolean _running;
 
-	/*
+	/**
 	 * VirtualDisk Constructors
 	 */
-	public VirtualDisk(String volName, boolean format) throws FileNotFoundException,
-			IOException {
+	public VirtualDisk(String volName, boolean format) throws FileNotFoundException, IOException {
 
 		_volName = volName;
 		_maxVolSize = Constants.BLOCK_SIZE * Constants.NUM_OF_BLOCKS;
@@ -42,31 +46,37 @@ public abstract class VirtualDisk implements IVirtualDisk {
 		 * set the length.
 		 */
 		_file.setLength(Constants.BLOCK_SIZE * Constants.NUM_OF_BLOCKS);
-		if(format) {
+		if (format) {
 			formatStore();
 		}
 		/* Other methods as required */
+
+		/* Initialize the request queue */
+		_queue = new ArrayDeque<Request>();
+		_running = true;
 	}
-	
-	public VirtualDisk(boolean format) throws FileNotFoundException,
-	IOException {
+
+	public VirtualDisk(boolean format) throws FileNotFoundException, IOException {
 		this(Constants.vdiskName, format);
 	}
-	
-	public VirtualDisk() throws FileNotFoundException,
-	IOException {
+
+	public VirtualDisk() throws FileNotFoundException, IOException {
 		this(Constants.vdiskName, false);
 	}
 
-	/*
-	 * Start an asynchronous request to the underlying device/disk/volume. 
-	 * -- buf is an DBuffer object that needs to be read/write from/to the volume.	
-	 * -- operation is either READ or WRITE  
+	/**
+	 * Start an asynchronous request to the underlying device/disk/volume. --
+	 * buf is an DBuffer object that needs to be read/write from/to the volume.
+	 * -- operation is either READ or WRITE
 	 */
-	public abstract void startRequest(DBuffer buf, DiskOperationType operation) throws IllegalArgumentException,
-			IOException;
-	
-	/*
+	public void startRequest(DBuffer buf, DiskOperationType operation) throws IllegalArgumentException, IOException {
+		synchronized (_queue) {
+			_queue.add(new Request(buf, operation));
+			_queue.notifyAll();
+		}
+	}
+
+	/**
 	 * Clear the contents of the disk by writing 0s to it
 	 */
 	private void formatStore() {
@@ -83,7 +93,7 @@ public abstract class VirtualDisk implements IVirtualDisk {
 		}
 	}
 
-	/*
+	/***
 	 * helper function: setBuffer
 	 */
 	private static void setBuffer(byte value, byte b[], int bufSize) {
@@ -92,13 +102,13 @@ public abstract class VirtualDisk implements IVirtualDisk {
 		}
 	}
 
-	/*
+	/***
 	 * Reads the buffer associated with DBuffer to the underlying
 	 * device/disk/volume
 	 */
 	private int readBlock(DBuffer buf) throws IOException {
 		int seekLen = buf.getBlockID() * Constants.BLOCK_SIZE;
-		/* Boundary check */
+		/** Boundary check */
 		if (_maxVolSize < seekLen + Constants.BLOCK_SIZE) {
 			return -1;
 		}
@@ -106,7 +116,7 @@ public abstract class VirtualDisk implements IVirtualDisk {
 		return _file.read(buf.getBuffer(), 0, Constants.BLOCK_SIZE);
 	}
 
-	/*
+	/***
 	 * Writes the buffer associated with DBuffer to the underlying
 	 * device/disk/volume
 	 */
@@ -114,5 +124,60 @@ public abstract class VirtualDisk implements IVirtualDisk {
 		int seekLen = buf.getBlockID() * Constants.BLOCK_SIZE;
 		_file.seek(seekLen);
 		_file.write(buf.getBuffer(), 0, Constants.BLOCK_SIZE);
+	}
+
+	public void terminate() {
+		_running = false;
+	}
+
+	@Override
+	public void run() {
+		while (_running) {
+			synchronized (_queue) {
+				while (_queue.isEmpty()) {
+					try {
+						_queue.wait();
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+				Request request = _queue.poll();
+				try {
+					if (request.getOperation() == DiskOperationType.READ) {
+
+						readBlock(request.getDBuffer());
+
+					} else {
+						writeBlock(request.getDBuffer());
+					}
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} finally {
+					request.getDBuffer().ioComplete();
+				}
+
+			}
+		}
+	}
+
+	public class Request {
+
+		private DBuffer _buf = null;
+		private DiskOperationType _op = null;
+
+		public Request(DBuffer buf, DiskOperationType operation) {
+			_buf = buf;
+			_op = operation;
+		}
+
+		public DBuffer getDBuffer() {
+			return _buf;
+		}
+
+		public DiskOperationType getOperation() {
+			return _op;
+		}
 	}
 }
