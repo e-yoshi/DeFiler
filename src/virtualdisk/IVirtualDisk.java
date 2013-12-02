@@ -7,7 +7,7 @@ import dblockcache.DBuffer;
 
 public interface IVirtualDisk {
 	
-	/*
+	/**
 	 * Start an asynchronous request to the underlying device/disk/volume.   
 	 *  -- buf is an DBuffer object that needs to be read/write from/to the volume
 	 *  -- operation is either READ or WRITE
