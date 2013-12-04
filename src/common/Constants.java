@@ -20,7 +20,10 @@ public class Constants {
 	public static final int MAX_FILE_SIZE = BLOCK_SIZE*500; // Constraint on the max file size
 
 	public static final int MAX_DFILES = 512; // For recylcing DFileIDs
-
+	
+	// Represents an error on a reading or writing operation on the dbuffer
+	public static final int DBUFFER_ERROR = -1; 
+	
 	/* DStore Operation types */
 	public enum DiskOperationType {
 		READ, WRITE

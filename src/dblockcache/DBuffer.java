@@ -1,6 +1,7 @@
 package dblockcache;
 
 import java.io.IOException;
+import common.Constants;
 import common.Constants.DiskOperationType;
 import virtualdisk.IVirtualDisk;
 
@@ -9,6 +10,7 @@ public class DBuffer {
 	private byte[] _buffer;
 	private boolean _isValid;
 	private boolean _isBusy;
+	private int _blockID;
 	
 	private IVirtualDisk _disk;
     
@@ -27,7 +29,6 @@ public class DBuffer {
 	        System.out.println("Culpa do Elder!");
 	        e.printStackTrace();
 	    }
-	    //CHANGE VALID AND BUSY??
 	}
 	
 	/** 
@@ -38,15 +39,12 @@ public class DBuffer {
 	    if (_isClean) return;
 	    _isBusy = true;
 	    
-
 	    try {
 	        _disk.startRequest(this, DiskOperationType.WRITE);
 	    }
 	    catch (IllegalArgumentException | IOException e) {
 	        e.printStackTrace();
-	    }
-	    
-	   //CHANGE VALID AND BUSY?? 
+	    } 
 	}
 
 	/** 
@@ -118,27 +116,41 @@ public class DBuffer {
 	 * written.
 	 */
 	public int write(byte[] buffer, int startOffset, int count) {
+	    _isClean = false;
+	    if(startOffset + count > buffer.length || startOffset < 0)
+	        return Constants.DBUFFER_ERROR;
 	    
+	    
+	    for (int i = 0; i < count; i++) {
+	        _buffer[i] = buffer[i + startOffset];
+	    }
+	    
+	    notifyAll();
+	    return count;
 	}
 	
 	/**
 	 *  An upcall from VirtualDisk layer to inform the completion of an IO operation 
 	 *  */
 	public void ioComplete() {
+	    _isBusy = false;
+	    _isValid = true;
 	    
+	    //Wake threads waiting on this dBuffer's state
+	    notifyAll();
 	}
 	
 	/**
 	 *  An upcall from VirtualDisk layer to fetch the blockID associated with a startRequest operation 
 	 *  */
 	public int getBlockID() {
-	    
+	    return _blockID;
 	}
 	
 	/**
 	 *  An upcall from VirtualDisk layer to fetch the buffer associated with DBuffer object
 	 *  */
 	public byte[] getBuffer() {
-	    
+	    return _buffer;
 	}
 }
