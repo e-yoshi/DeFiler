@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.Queue;
 
+import sun.awt.image.OffScreenImage;
 import common.Constants;
 import common.Constants.DiskOperationType;
 import dblockcache.DBuffer;
@@ -71,7 +72,9 @@ public class VirtualDisk implements IVirtualDisk, Runnable {
 	 */
 	public void startRequest(DBuffer buf, DiskOperationType operation) throws IllegalArgumentException, IOException {
 		synchronized (_queue) {
-			_queue.add(new Request(buf, operation));
+			while(!_queue.offer(new Request(buf, operation))) {
+				continue;
+			}
 			_queue.notifyAll();
 		}
 	}
@@ -143,6 +146,7 @@ public class VirtualDisk implements IVirtualDisk, Runnable {
 					}
 				}
 				Request request = _queue.poll();
+				if(request == null) return;
 				try {
 					if (request.getOperation() == DiskOperationType.READ) {
 
