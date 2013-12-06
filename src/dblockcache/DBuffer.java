@@ -5,6 +5,14 @@ import common.Constants;
 import common.Constants.DiskOperationType;
 import virtualdisk.IVirtualDisk;
 
+/**
+ * Used to represent a block in the defiler cache
+ * It keeps track of the state of the block and makes reads and writes on the disk
+ * It can also be read from and written to
+ * 
+ * @author henriquemoraes
+ *
+ */
 public class DBuffer {
 	private boolean _isClean;
 	private byte[] _dBuffer;
@@ -13,8 +21,17 @@ public class DBuffer {
 	private int _blockID;
 	
 	private IVirtualDisk _disk;
-    
-    
+     
+	// Constructor
+	DBuffer(IVirtualDisk disk, int blockID) {
+	    _isClean = true;
+	    _isBusy = false;
+	    _disk = disk;
+	    _blockID = blockID;
+	    _isValid = false;
+	    _dBuffer = new byte[Constants.BLOCK_SIZE];
+	}
+	
 	/**
 	 *  Start an asynchronous fetch of associated block from the volume 
 	 **/
@@ -34,6 +51,7 @@ public class DBuffer {
 	/** 
 	 * Start an asynchronous write of buffer contents to block on volume 
 	 * 
+	 * Returns immediately is buffer is clean
 	 **/
 	public void startPush() {
 	    if (_isClean) return;
@@ -44,7 +62,9 @@ public class DBuffer {
 	    }
 	    catch (IllegalArgumentException | IOException e) {
 	        e.printStackTrace();
-	    } 
+	    }
+
+	    notifyAll();
 	}
 
 	/** 
@@ -112,6 +132,9 @@ public class DBuffer {
 	    
 	    if(startOffset + count > buffer.length || startOffset < 0)
                 return Constants.DBUFFER_ERROR;
+	    
+	    if(!_isValid)
+	        return -1;
             
 	    // Read from the whole dBuffer
 	    if(count > _dBuffer.length)
@@ -143,22 +166,24 @@ public class DBuffer {
 	    if(startOffset + count > buffer.length || startOffset < 0)
 	        return Constants.DBUFFER_ERROR;
 	    
+	    int readBytes = count;
+	    
 	    // Write on the whole dBuffer
 	    if(count > _dBuffer.length)
-	        count = _dBuffer.length;
-	    
-	    // Passed tests, mark dBuff as dirty
-            _isClean = false;
+	        readBytes = _dBuffer.length;
 	    
 	    // write into dBuff
-	    for (int i = 0; i < count; i++) 
+	    for (int i = 0; i < readBytes; i++) 
 	        _dBuffer[i] = buffer[i + startOffset];
 	    
+	    // Passed tests and got written, mark dBuff as dirty but valid
+            _isClean = false;
+            _isValid = true;
+	    
 	    // To prevent wrong readings, add EOF
-	    if (count < _dBuffer.length)
+	    if (readBytes < _dBuffer.length)
 	        _dBuffer[count] = Constants.EOF;
 	   
-	    
 	    notifyAll();
 	    return count;
 	}
@@ -166,9 +191,10 @@ public class DBuffer {
 	/**
 	 *  An upcall from VirtualDisk layer to inform the completion of an IO operation 
 	 *  */
-	public void ioComplete() {
+	public synchronized void ioComplete() {
 	    _isBusy = false;
 	    _isValid = true;
+	    _isClean = true;
 	    
 	    //Wake threads waiting on this dBuffer's state
 	    notifyAll();
@@ -186,5 +212,13 @@ public class DBuffer {
 	 *  */
 	public byte[] getBuffer() {
 	    return _dBuffer;
+	}
+	
+	/**
+	 * 
+	 * @param busy sets whether this buffer is busy or not
+	 */
+	public void setBusy(boolean busy) {
+	    _isBusy = busy;
 	}
 }
