@@ -24,6 +24,8 @@ public class Constants {
 	// Represents an error on a reading or writing operation on the dbuffer
 	public static final int DBUFFER_ERROR = -1; 
 	
+	public static byte EOF = (byte) 0x1ceb00da;
+	
 	/* DStore Operation types */
 	public enum DiskOperationType {
 		READ, WRITE

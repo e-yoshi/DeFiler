@@ -7,7 +7,7 @@ import virtualdisk.IVirtualDisk;
 
 public class DBuffer {
 	private boolean _isClean;
-	private byte[] _buffer;
+	private byte[] _dBuffer;
 	private boolean _isValid;
 	private boolean _isBusy;
 	private int _blockID;
@@ -104,9 +104,30 @@ public class DBuffer {
 	 * first that the DBuffer has a valid copy of the data! startOffset and
 	 * count are for the buffer array, not the DBuffer. Upon an error, it should
 	 * return -1, otherwise return number of bytes read.
+	 * 
+	 * If it hits the end of the file, it returns the number of bytes read up
+	 * to that point
 	 */
 	public int read(byte[] buffer, int startOffset, int count) {
 	    
+	    if(startOffset + count > buffer.length || startOffset < 0)
+                return Constants.DBUFFER_ERROR;
+            
+	    // Read from the whole dBuffer
+	    if(count > _dBuffer.length)
+	        count = _dBuffer.length;
+            
+            // read into dBuff
+            for (int i = 0; i < count; i++) {
+               
+                if(_dBuffer[i] == Constants.EOF) 
+                    return i;
+                
+                buffer[i + startOffset] = _dBuffer[i];
+            }
+              
+            notifyAll();
+            return count;
 	}
 
 	/**
@@ -114,16 +135,29 @@ public class DBuffer {
 	 * and count are for the buffer array, not the DBuffer. Mark buffer dirty!
 	 * Upon an error, it should return -1, otherwise return number of bytes
 	 * written.
+	 * 
+	 * If count is greater than a block size, only BLOCK_SIZE bytes will be written 
 	 */
-	public int write(byte[] buffer, int startOffset, int count) {
-	    _isClean = false;
+	public synchronized int write(byte[] buffer, int startOffset, int count) {
+	    
 	    if(startOffset + count > buffer.length || startOffset < 0)
 	        return Constants.DBUFFER_ERROR;
 	    
+	    // Write on the whole dBuffer
+	    if(count > _dBuffer.length)
+	        count = _dBuffer.length;
 	    
-	    for (int i = 0; i < count; i++) {
-	        _buffer[i] = buffer[i + startOffset];
-	    }
+	    // Passed tests, mark dBuff as dirty
+            _isClean = false;
+	    
+	    // write into dBuff
+	    for (int i = 0; i < count; i++) 
+	        _dBuffer[i] = buffer[i + startOffset];
+	    
+	    // To prevent wrong readings, add EOF
+	    if (count < _dBuffer.length)
+	        _dBuffer[count] = Constants.EOF;
+	   
 	    
 	    notifyAll();
 	    return count;
@@ -151,6 +185,6 @@ public class DBuffer {
 	 *  An upcall from VirtualDisk layer to fetch the buffer associated with DBuffer object
 	 *  */
 	public byte[] getBuffer() {
-	    return _buffer;
+	    return _dBuffer;
 	}
 }
