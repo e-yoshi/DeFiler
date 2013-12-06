@@ -13,7 +13,7 @@ import virtualdisk.IVirtualDisk;
  * @author henriquemoraes
  *
  */
-public class DBuffer {
+public class DBuffer implements Comparable<DBuffer>{
 	private boolean _isClean;
 	private byte[] _dBuffer;
 	private boolean _isValid;
@@ -21,6 +21,8 @@ public class DBuffer {
 	private int _blockID;
 	
 	private IVirtualDisk _disk;
+	
+	private long _lastUsed;
      
 	// Constructor
 	DBuffer(IVirtualDisk disk, int blockID) {
@@ -135,6 +137,8 @@ public class DBuffer {
 	    
 	    if(!_isValid)
 	        return -1;
+	    
+	    blockUsed();
             
 	    // Read from the whole dBuffer
 	    if(count > _dBuffer.length)
@@ -195,6 +199,7 @@ public class DBuffer {
 	    _isBusy = false;
 	    _isValid = true;
 	    _isClean = true;
+	    blockUsed();
 	    
 	    //Wake threads waiting on this dBuffer's state
 	    notifyAll();
@@ -220,5 +225,33 @@ public class DBuffer {
 	 */
 	public void setBusy(boolean busy) {
 	    _isBusy = busy;
+	}
+	
+	/**
+	 * 
+	 * @return Last time this buffer was used
+	 */
+	public long getLastUsed() {
+	    return _lastUsed;
+	}
+	
+	/**
+	 * Marks the last time this block was used
+	 */
+	private void blockUsed() {
+	    _lastUsed = System.currentTimeMillis();
+	}
+
+	@Override
+	public int compareTo (DBuffer o) {
+	    if (o == null) return -1; // Choose this
+	    
+	    if (_lastUsed == o.getLastUsed())
+	        return o.getBlockID() - _blockID;
+	    else if (_lastUsed > o.getLastUsed())
+	        return 1;
+	    
+	    return -1;
+	    
 	}
 }

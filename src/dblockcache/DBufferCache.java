@@ -59,7 +59,10 @@ public class DBufferCache {
 	        }
 	}
 	
+	/**
+	 * Ceases execution of the disk
+	 */
 	public void terminate() {
-	    
+	    _disk.terminate();
 	}
 }
