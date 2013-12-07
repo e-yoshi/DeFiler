@@ -29,6 +29,8 @@ public class Constants {
 	
 	public static final int INTS_IN_BLOCK = BLOCK_SIZE/4;
 	
+	public static final int POSITION_INDIRECT_BLOCK_REGION = 2;
+	
 	public static byte EOF = (byte) 0x1ceb00da;
 	
 	/* DStore Operation types */
