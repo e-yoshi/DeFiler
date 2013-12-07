@@ -1,21 +1,14 @@
 package dblockcache;
 
-import java.io.IOException;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.TreeMap;
-import virtualdisk.IVirtualDisk;
 import virtualdisk.VirtualDisk;
 import common.Constants;
 
 public class DBufferCache {
-	
-	private int _cacheSize;
 	
 	private VirtualDisk _disk;
 	
@@ -42,10 +35,9 @@ public class DBufferCache {
 	 * containing BLOCK-size bytes data, in memory
 	 */
 	public DBufferCache(int cacheSize, VirtualDisk disk) {
-		_cacheSize = cacheSize * Constants.BLOCK_SIZE;
 		_replacementBlocks = new ArrayDeque<>();
 		_freeBlocksInDisk = new PriorityQueue<>();
-		_blocksInCache = new TreeMap<Integer, DBuffer>();
+		_blocksInCache = new TreeMap<>();
 		
 		_disk = disk;
 		initializeCache();
@@ -63,7 +55,7 @@ public class DBufferCache {
 	        _freeBlocksInDisk.add(i);
 	    }
 	    
-	    //Initialize inode region blocks and put them in cache
+	    //Initialize inode region blocks and put them in cache, skip block 0
 	    for (int i = 1; i <= inodeRegionSize; i++) {
 	        _blocksInCache.put(i, new DBuffer(_disk, i));
 	    }
@@ -100,6 +92,7 @@ public class DBufferCache {
 	 * Creates space in cache according to LRU policy in case cache is full
 	 */
 	public void checkLRULatency() {
+	    sync();
 	    while (_blocksInCache.size() >= Constants.NUM_OF_CACHE_BLOCKS) {
 	        Integer blockID = _replacementBlocks.poll();
 	        _blocksInCache.remove(blockID);

@@ -21,8 +21,6 @@ public class DBuffer {
 	private int _blockID;
 	
 	private IVirtualDisk _disk;
-	
-	private long _lastUsed;
      
 	// Constructor
 	DBuffer(IVirtualDisk disk, int blockID) {
@@ -217,18 +215,10 @@ public class DBuffer {
 	}
 	
 	/**
-	 * 
+	 * Signals as "held"
 	 * @param busy sets whether this buffer is busy or not
 	 */
 	public void setBusy(boolean busy) {
 	    _isBusy = busy;
-	}
-	
-	/**
-	 * 
-	 * @return Last time this buffer was used
-	 */
-	public long getLastUsed() {
-	    return _lastUsed;
 	}
 }
