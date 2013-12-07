@@ -23,12 +23,11 @@ public class Constants {
 	
 	public static final int INODE_FID = 0;
 	public static final int INODE_FILE_SIZE = 1;
-	public static final int INODE_INDIRECT_BLOCKS = 2;
-	public static final int INODE_FIRST_BLOCK = 3;
-	public static final int INODE_SECOND_BLOCK = 4;
 	
 	// Represents an error on a reading or writing operation on the dbuffer
-	public static final int DBUFFER_ERROR = -1; 
+	public static final int DBUFFER_ERROR = -1;
+	
+	public static final int INTS_IN_BLOCK = BLOCK_SIZE/4;
 	
 	public static byte EOF = (byte) 0x1ceb00da;
 	
