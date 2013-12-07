@@ -1,16 +1,28 @@
 package dfs;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.List;
 
+import virtualdisk.VirtualDisk;
+import common.Constants;
 import common.DFileID;
+import dblockcache.DBufferCache;
 
 public class DFSImpl extends DFS {
 	
+	DBufferCache _cache;
+	
 	@Override
 	public void init() {
-		// TODO Auto-generated method stub
-		synchronized (this) {
-			
+		synchronized (_cache) {
+			try {
+				_cache = new DBufferCache(Constants.NUM_OF_CACHE_BLOCKS, new VirtualDisk(super._volName, super._format));
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
