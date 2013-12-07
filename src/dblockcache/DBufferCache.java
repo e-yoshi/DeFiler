@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Queue;
+import java.util.TreeMap;
 import virtualdisk.IVirtualDisk;
 import virtualdisk.VirtualDisk;
 import common.Constants;
@@ -34,7 +35,7 @@ public class DBufferCache {
 	 * Use a queue to approximate LRU replacement algorithm
 	 * If a block is reused, it is added back to the end of the queue
 	 */
-	private Queue<Integer> _replacementBuffers;
+	private Queue<Integer> _replacementBlocks;
 	
 	/**
 	 * Constructor: allocates a cacheSize number of cache blocks, each
@@ -42,21 +43,29 @@ public class DBufferCache {
 	 */
 	public DBufferCache(int cacheSize, VirtualDisk disk) {
 		_cacheSize = cacheSize * Constants.BLOCK_SIZE;
-		_replacementBuffers = new ArrayDeque<Integer>();
+		_replacementBlocks = new ArrayDeque<>();
+		_freeBlocksInDisk = new PriorityQueue<>();
+		_blocksInCache = new TreeMap<Integer, DBuffer>();
 		
 		_disk = disk;
+		initializeCache();
 		Thread diskThread = new Thread(_disk);
 		diskThread.start();		
 	}
 	
 	private void initializeCache() {
-	    _freeBlocksInDisk = new PriorityQueue<>();
+	    
 	    int inodesInBlock = (int) Math.ceil(Constants.BLOCK_SIZE/Constants.INODE_SIZE);
 	    inodeRegionSize = (int) Math.ceil(Constants.MAX_DFILES/inodesInBlock);
 	    
 	    //Skip block zero and inode region
-	    for (int i = inodeRegionSize; i < Constants.NUM_OF_BLOCKS; i++) {
-	        
+	    for (int i = inodeRegionSize + 1; i < Constants.NUM_OF_BLOCKS; i++) {
+	        _freeBlocksInDisk.add(i);
+	    }
+	    
+	    //Initialize inode region blocks and put them in cache
+	    for (int i = 1; i <= inodeRegionSize; i++) {
+	        _blocksInCache.put(i, new DBuffer(_disk, i));
 	    }
 	}
 	
@@ -67,7 +76,46 @@ public class DBufferCache {
 	 *
 	 */
 	public DBuffer getBlock(int blockID) {
+	    if(_blocksInCache.containsKey(blockID)) {
+	        updateLRUBlock(blockID);
+	        return _blocksInCache.get(blockID);
+	    }
 	    
+	    checkLRULatency();
+	    DBuffer buffer = null;
+	    buffer = new DBuffer(_disk, blockID);
+	    
+	    if (!_freeBlocksInDisk.contains(blockID))
+	        buffer.startFetch();
+	    else
+	        _freeBlocksInDisk.remove(blockID);
+	    
+	    _blocksInCache.put(blockID, buffer);
+            _replacementBlocks.add(blockID);
+            
+            return buffer;
+	}
+	
+	/**
+	 * Creates space in cache according to LRU policy in case cache is full
+	 */
+	public void checkLRULatency() {
+	    while (_blocksInCache.size() >= Constants.NUM_OF_CACHE_BLOCKS) {
+	        Integer blockID = _replacementBlocks.poll();
+	        _blocksInCache.remove(blockID);
+	    }
+	}
+	
+	/**
+	 * If the block is in the cache, move it to the end of the queue
+	 * @param blockID
+	 */
+	public void updateLRUBlock(int blockID) {
+	    if(blockID <= inodeRegionSize) return;
+	    if (_replacementBlocks.contains(blockID)) {
+	        _replacementBlocks.remove(blockID);
+	        _replacementBlocks.add(blockID);
+	    }
 	}
 
 	/**
@@ -82,15 +130,10 @@ public class DBufferCache {
 	 * The sync() method should maintain clean block copies in DBufferCache.
 	 */
 	public void sync() {
-	    for (DBuffer d : _bufferList)
-	        if(!d.checkClean()) { 
-	            try {
-	                _disk.startRequest(d, Constants.DiskOperationType.WRITE);
-	            }
-	            catch (IllegalArgumentException | IOException e) {
-	                e.printStackTrace();
-	            }
-	        }
+	    for (Integer i : _blocksInCache.keySet()) {
+	        DBuffer buffer = _blocksInCache.get(i);
+	        buffer.startPush();
+	    }
 	}
 	
 	/**
@@ -98,5 +141,13 @@ public class DBufferCache {
 	 */
 	public void terminate() {
 	    _disk.terminate();
+	}
+	
+	/**
+	 * 
+	 * @return number of Blocks from the inode region
+	 */
+	public int getInodeRegionSize() {
+	    return inodeRegionSize;
 	}
 }
