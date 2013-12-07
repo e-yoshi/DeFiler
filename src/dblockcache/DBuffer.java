@@ -241,17 +241,4 @@ public class DBuffer implements Comparable<DBuffer>{
 	private void blockUsed() {
 	    _lastUsed = System.currentTimeMillis();
 	}
-
-	@Override
-	public int compareTo (DBuffer o) {
-	    if (o == null) return -1; // Choose this
-	    
-	    if (_lastUsed == o.getLastUsed())
-	        return o.getBlockID() - _blockID;
-	    else if (_lastUsed > o.getLastUsed())
-	        return 1;
-	    
-	    return -1;
-	    
-	}
 }

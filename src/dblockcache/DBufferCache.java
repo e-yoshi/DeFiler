@@ -1,9 +1,13 @@
 package dblockcache;
 
 import java.io.IOException;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.PriorityQueue;
+import java.util.Queue;
 import virtualdisk.IVirtualDisk;
 import virtualdisk.VirtualDisk;
 import common.Constants;
@@ -11,8 +15,26 @@ import common.Constants;
 public class DBufferCache {
 	
 	private int _cacheSize;
-	private PriorityQueue<DBuffer> _bufferList;
+	
 	private VirtualDisk _disk;
+	
+	private int inodeRegionSize;
+	
+	/**
+	 * Use of a priority queue to mark the free blocks from the disk
+	 */
+	private PriorityQueue<Integer> _freeBlocksInDisk;
+	
+	/**
+	 * Use a map to get fast acces to the dBuffers in the cache
+	 */
+	private Map<Integer, DBuffer> _blocksInCache;
+	
+	/**
+	 * Use a queue to approximate LRU replacement algorithm
+	 * If a block is reused, it is added back to the end of the queue
+	 */
+	private Queue<Integer> _replacementBuffers;
 	
 	/**
 	 * Constructor: allocates a cacheSize number of cache blocks, each
@@ -20,14 +42,23 @@ public class DBufferCache {
 	 */
 	public DBufferCache(int cacheSize, VirtualDisk disk) {
 		_cacheSize = cacheSize * Constants.BLOCK_SIZE;
-		_bufferList = new PriorityQueue<>();
+		_replacementBuffers = new ArrayDeque<Integer>();
 		
 		_disk = disk;
 		Thread diskThread = new Thread(_disk);
 		diskThread.start();		
 	}
 	
-	private void 
+	private void initializeCache() {
+	    _freeBlocksInDisk = new PriorityQueue<>();
+	    int inodesInBlock = (int) Math.ceil(Constants.BLOCK_SIZE/Constants.INODE_SIZE);
+	    inodeRegionSize = (int) Math.ceil(Constants.MAX_DFILES/inodesInBlock);
+	    
+	    //Skip block zero and inode region
+	    for (int i = inodeRegionSize; i < Constants.NUM_OF_BLOCKS; i++) {
+	        
+	    }
+	}
 	
 	/**
 	 * Get buffer for block specified by blockID. The buffer is "held" until the
