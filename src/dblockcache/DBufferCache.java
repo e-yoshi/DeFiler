@@ -3,6 +3,7 @@ package dblockcache;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.PriorityQueue;
 import virtualdisk.IVirtualDisk;
 import virtualdisk.VirtualDisk;
 import common.Constants;
@@ -10,7 +11,7 @@ import common.Constants;
 public class DBufferCache {
 	
 	private int _cacheSize;
-	private List<DBuffer> _bufferList;
+	private PriorityQueue<DBuffer> _bufferList;
 	private VirtualDisk _disk;
 	
 	/**
@@ -19,18 +20,20 @@ public class DBufferCache {
 	 */
 	public DBufferCache(int cacheSize, VirtualDisk disk) {
 		_cacheSize = cacheSize * Constants.BLOCK_SIZE;
-		_bufferList = new ArrayList<>();
+		_bufferList = new PriorityQueue<>();
 		
 		_disk = disk;
 		Thread diskThread = new Thread(_disk);
-		diskThread.start();
-		
+		diskThread.start();		
 	}
+	
+	private void 
 	
 	/**
 	 * Get buffer for block specified by blockID. The buffer is "held" until the
 	 * caller releases it. A "held" buffer cannot be evicted: its block ID
 	 * cannot change.
+	 *
 	 */
 	public DBuffer getBlock(int blockID) {
 	    

@@ -19,7 +19,13 @@ public class Constants {
 	public static final int NUM_OF_CACHE_BLOCKS = 65536; // 2^16
 	public static final int MAX_FILE_SIZE = BLOCK_SIZE*500; // Constraint on the max file size
 
-	public static final int MAX_DFILES = 512; // For recylcing DFileIDs
+	public static final int MAX_DFILES = 512; // For recylcing DFileIDs`
+	
+	public static final int INODE_FID = 0;
+	public static final int INODE_FILE_SIZE = 1;
+	public static final int INODE_INDIRECT_BLOCKS = 2;
+	public static final int INODE_FIRST_BLOCK = 3;
+	public static final int INODE_SECOND_BLOCK = 4;
 	
 	// Represents an error on a reading or writing operation on the dbuffer
 	public static final int DBUFFER_ERROR = -1; 
