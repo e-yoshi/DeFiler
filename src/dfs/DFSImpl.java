@@ -73,8 +73,14 @@ public class DFSImpl extends DFS {
 
 	@Override
 	public void destroyDFile(DFileID dFID) {
-		// TODO Auto-generated method stub
-
+		synchronized (_fileMap) {
+			DFile file = _fileMap.get(dFID.getDFileID());
+			//lock file writer, avoid readers from reading this file
+			file.getLock().writeLock().lock();
+			DBuffer dbuf = _cache.getBlock(file.getINodeBlock());
+			byte[] buffer = dbuf.getBuffer();
+			
+		}
 	}
 
 	@Override
@@ -160,6 +166,7 @@ public class DFSImpl extends DFS {
 			if (_fileMap.isEmpty())
 				return true;
 			for (DFile file : _fileMap.values()) {
+				file.getLock().readLock().lock();
 				for (int i : file.getIndirectBlocks()) {
 					DBuffer indirectBlock = _cache.getBlock(i);
 					indirectBlock.read(buffer, 0, Constants.BLOCK_SIZE);
@@ -179,6 +186,7 @@ public class DFSImpl extends DFS {
 						// Does datablock have a fileId in header?
 					}
 				}
+				file.getLock().readLock().unlock();
 			}
 
 		}

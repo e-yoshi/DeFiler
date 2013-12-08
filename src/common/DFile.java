@@ -21,8 +21,8 @@ public class DFile {
 		_file = fileId;
 		_size = size;
 		_indirectBlocks = indirectBlocks;
-		_iNodeBlock = iNodeBlock;
-		_iNodePosition = iNodePosition;
+		setINodeBlock(iNodeBlock);
+		setINodePosition(iNodePosition);
 	}
 
 	public ReadWriteLock getLock() {
@@ -47,5 +47,21 @@ public class DFile {
 
 	public void setSize(int _size) {
 		this._size = _size;
+	}
+
+	public int getINodeBlock() {
+		return _iNodeBlock;
+	}
+
+	public void setINodeBlock(int _iNodeBlock) {
+		this._iNodeBlock = _iNodeBlock;
+	}
+
+	public int getINodePosition() {
+		return _iNodePosition;
+	}
+
+	public void setINodePosition(int _iNodePosition) {
+		this._iNodePosition = _iNodePosition;
 	}
 }
