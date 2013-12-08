@@ -103,6 +103,13 @@ public class DFSImpl extends DFS {
 
 	}
 
+	/**
+	 * Reads the Inodes from a DBuffer from the Inode region during
+	 * initialization Adds the used indirect blocks to the used blocks list and
+	 * checks for files consistency.
+	 * 
+	 * @param buf
+	 */
 	private void readInodes(DBuffer buf) {
 		for (int i = 0; i < Constants.INODES_IN_BLOCK; i++) {
 			byte[] buffer = new byte[Constants.INODE_SIZE];
@@ -117,7 +124,7 @@ public class DFSImpl extends DFS {
 						.copyOfRange(buffer, 4 * Constants.INODE_FILE_SIZE, 4 * (Constants.INODE_FILE_SIZE + 1));
 				int fileSize = ByteBuffer.wrap(integer).getInt();
 				List<Integer> indirectBlocks = new ArrayList<>();
-				for (int j = 2; j < (Constants.INODE_SIZE / 4); j++) {
+				for (int j = Constants.POSITION_INDIRECT_BLOCK_REGION; j < (Constants.INODE_SIZE / 4); j++) {
 					integer = Arrays.copyOfRange(buffer, 4 * j, 4 * (j + 1));
 					int indBlock = ByteBuffer.wrap(integer).getInt();
 					if (indBlock > 0) {
@@ -132,7 +139,12 @@ public class DFSImpl extends DFS {
 		}
 	}
 
+	/**
+	 * Checks consistency of a DFile. Checks if the 
+	 * @param file
+	 */
 	private void checkFileConsistency(DFile file) {
+
 	}
 
 }
