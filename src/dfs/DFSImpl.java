@@ -27,11 +27,11 @@ public class DFSImpl extends DFS {
 	SortedSet<Integer> _freeBlocks = new TreeSet<Integer>();
 	Map<Integer, DFile> _fileMap = new HashMap<Integer, DFile>();
 	List<Integer> _lockedBlocks = new ArrayList<>();
-	
+
 	public DFSImpl() {
 		super();
 	}
-	
+
 	public DFSImpl(boolean format) {
 		super(format);
 	}
@@ -39,7 +39,7 @@ public class DFSImpl extends DFS {
 	public DFSImpl(String volName, boolean format) {
 		super(volName, format);
 	}
-	
+
 	@Override
 	public void init() {
 		synchronized (_cache) {
@@ -58,6 +58,7 @@ public class DFSImpl extends DFS {
 		for (int i = 1; i <= Constants.INODE_REGION_END; i++) {
 			DBuffer block = _cache.getBlock(i);
 			readInodes(block);
+
 		}
 		// Reserve INode Region
 		for (int i = 0; i < Constants.INODE_REGION_END; i++) {
@@ -240,7 +241,13 @@ public class DFSImpl extends DFS {
 						indirectBlocks.add(indBlock);
 					}
 				}
+				if (fileSize > Constants.MAX_FILE_SIZE) {
+					throw new IllegalStateException("Invalid File Size");
+				}
 				DFile file = new DFile(fileId, fileSize, indirectBlocks, buf.getBlockID(), i);
+				if (_fileMap.containsKey(fileId)) {
+					throw new IllegalStateException("One Inode should only map to one file");
+				}
 				_fileMap.put(fileId, file);
 			}
 		}
@@ -251,13 +258,13 @@ public class DFSImpl extends DFS {
 	 * 
 	 * @param file
 	 */
-	private boolean checkFileConsistency() {
+	private void checkFileConsistency() {
 		synchronized (_fileMap) {
 			byte[] buffer = new byte[32];
 			byte[] integer = new byte[4];
 
 			if (_fileMap.isEmpty())
-				return true;
+				return;
 			for (DFile file : _fileMap.values()) {
 				file.getLock().readLock().lock();
 				for (int i : file.getIndirectBlocks()) {
@@ -266,23 +273,27 @@ public class DFSImpl extends DFS {
 						indirectBlock.startFetch();
 						indirectBlock.waitValid();
 					}
+					if (i > Constants.NUM_OF_BLOCKS || i < Constants.INODE_REGION_END)
+						throw new IllegalStateException("Invalid block index.");
 					indirectBlock.read(buffer, 0, Constants.BLOCK_SIZE);
 					if (_usedBlocks.contains(i)) {
-						return false; // Only one file should map to one
-										// indirect block
+						throw new IllegalStateException("One block should only be mapped by one file.");
 					}
+					//read datablocks
 					List<Integer> dataBlocks = new ArrayList<>();
 					for (int j = 0; j < Constants.INTS_IN_BLOCK; j++) {
-						integer = Arrays.copyOfRange(buffer, Constants.BYTES_PER_INT * j, Constants.BYTES_PER_INT * (j + 1));
+						integer = Arrays.copyOfRange(buffer, Constants.BYTES_PER_INT * j, Constants.BYTES_PER_INT
+								* (j + 1));
 						int dataBlockId = ByteBuffer.wrap(integer).getInt();
 						if (dataBlockId == 0)
 							continue;
+						if (dataBlockId > Constants.NUM_OF_BLOCKS || dataBlockId < Constants.INODE_REGION_END)
+							throw new IllegalStateException("Invalid block index.");
 						if (_usedBlocks.contains(dataBlockId)) {
-							return false;
+							throw new IllegalStateException("One block should only be mapped by one file.");
 						}
 						_usedBlocks.add(dataBlockId);
 						dataBlocks.add(dataBlockId);
-						// Does datablock have a fileId in header?
 					}
 					file.setDataBlocks(dataBlocks);
 				}
@@ -290,13 +301,5 @@ public class DFSImpl extends DFS {
 			}
 
 		}
-		return true;
 	}
-	/*
-	 * private boolean checkFileIdBlockHeader(byte[] buffer, DFile file) {
-	 * byte[] integer = new byte[4]; integer = Arrays.copyOfRange(buffer, 0, 4);
-	 * int fileId = ByteBuffer.wrap(integer).getInt(); if (fileId !=
-	 * file.getFileId()) { return false; // Indirect Block has the fileId in
-	 * header } return true; }
-	 */
 }

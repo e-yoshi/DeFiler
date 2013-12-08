@@ -1,19 +1,16 @@
 package test;
 
+import common.DFileID;
+
 import dfs.DFS;
 import dfs.DFSImpl;
 
-public class Tester implements Runnable{
+public class Tester{
 	
-	private DFS dfs = new DFS("vla.dat", true);
+	private DFS dfs = new DFSImpl(true);
 	
 	public void main(String args[]) {
-		dfs.createDFile();
-	}
-
-	@Override
-	public void run() {
-		// TODO Auto-generated method stub
+		DFileID = dfs.createDFile();
 		
 	}
 }
