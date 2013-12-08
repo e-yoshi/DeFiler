@@ -63,8 +63,9 @@ public class DBuffer {
 	    catch (IllegalArgumentException | IOException e) {
 	        e.printStackTrace();
 	    }
-
-	    notifyAll();
+	    synchronized(this) {
+	        notifyAll();
+	    }
 	}
 
 	/** 
@@ -148,8 +149,10 @@ public class DBuffer {
                 if(_dBuffer[i] == Constants.EOF) 
                     return i;
             }
-              
-            notifyAll();
+            
+            synchronized(this){
+                notifyAll();
+            }
             return count;
 	}
 
@@ -176,15 +179,16 @@ public class DBuffer {
 	    for (int i = 0; i < readBytes; i++) 
 	        _dBuffer[i] = buffer[i + startOffset];
 	    
-	    // Passed tests and got written, mark dBuff as dirty but valid
-            _isClean = false;
-            _isValid = true;
-	    
 	    // To prevent wrong readings, add EOF
 	    if (readBytes < _dBuffer.length)
 	        _dBuffer[count] = Constants.EOF;
 	   
-	    notifyAll();
+	    synchronized(this){
+                notifyAll();
+                // Passed tests and got written, mark dBuff as dirty but valid
+                _isClean = false;
+                _isValid = true;
+            }
 	    return count;
 	}
 	

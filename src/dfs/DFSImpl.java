@@ -18,6 +18,15 @@ import common.DFileID;
 import dblockcache.DBuffer;
 import dblockcache.DBufferCache;
 
+/**
+ * 
+ * This class is the entry point of the program and the main component that manages the 
+ * files. It can be initiated with a format parameter that specifies if the disk should be 
+ * formatted or not.
+ * 
+ * @author henriquemoraes, elderyoshida
+ *
+ */
 public class DFSImpl extends DFS {
 
 	DBufferCache _cache;
@@ -64,7 +73,7 @@ public class DFSImpl extends DFS {
 				if (_fileMap.containsKey(i)) {
 					continue;
 				}
-				_fileMap.put(i, writeInode(new DFile(i)));
+				_fileMap.put(i, new DFile(i));
 				return new DFileID(i);
 			}
 		}
@@ -279,11 +288,7 @@ public class DFSImpl extends DFS {
 		for (int i = 0; i < Constants.INODES_IN_BLOCK; i++) {
 			byte[] buffer = new byte[Constants.INODE_SIZE];
 			byte[] integer = new byte[4];
-			if (!buf.checkValid()) {
-				buf.startFetch();
-				buf.waitValid();
-			}
-			if (buf.read(buffer, i * Constants.INODE_SIZE, i * (Constants.INODE_SIZE + 1)) == -1)
+			if (buf.read(buffer, i * Constants.INODE_SIZE, Constants.INODE_SIZE) == -1)
 				continue;
 			else {
 				integer = Arrays.copyOfRange(buffer, Constants.BYTES_PER_INT * Constants.INODE_FID,
@@ -371,6 +376,7 @@ public class DFSImpl extends DFS {
 
 		}
 	}
+<<<<<<< HEAD
 
 	private DFile writeInode(DFile file) {
 		for (int i = 1; i <= Constants.INODE_REGION_SIZE; i++) {
@@ -396,4 +402,6 @@ public class DFSImpl extends DFS {
 		}
 		throw new IllegalStateException("File could not be written. Exceeded Inode Space");
 	}
+=======
+>>>>>>> b486dd72bfde29d8bbe0f66bdb9f925d8df0e3ff
 }
