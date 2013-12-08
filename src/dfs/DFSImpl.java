@@ -117,6 +117,7 @@ public class DFSImpl extends DFS {
 		int size = blockIDs.size();
 		int start = startOffset;
 		int howMany = count;
+		
 
 		for (int i = 0; i < size; i++) {
 			DBuffer dbuffer = _cache.getBlock(blockIDs.get(i));
