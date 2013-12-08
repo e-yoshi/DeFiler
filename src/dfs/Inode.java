@@ -26,6 +26,7 @@ public class Inode {
     private int _fileSize;
     private byte[] _buffer;
     private boolean _isMapped;
+    private List<Integer> _blocksFromFile;
     
     private int _numOfIndirectBlocks;
     
@@ -34,6 +35,7 @@ public class Inode {
         _FID = fileID;
         _fileSize = size;
         _buffer = new byte[Constants.INODE_SIZE];
+        _blocksFromFile = new ArrayList<>();
 
         byte[] someMetadata = writeInts(_FID.getDFileID(), _fileSize);
         System.arraycopy(someMetadata.length, 0, _buffer, 0, someMetadata.length);
@@ -62,6 +64,8 @@ public class Inode {
             System.out.println("Blocks to write is greater than what indirect blocks can map");
             return false;
         }
+        
+        _blocksFromFile = blocksInFile;
         
         List<Integer> indirectBlocksIDs = new ArrayList<>(); 
         int subListStart = 0;
@@ -169,5 +173,9 @@ public class Inode {
             e.printStackTrace();
             return Constants.DBUFFER_ERROR;
         }
+    }
+    
+    public List<Integer> getBlocksInFile() {
+        return _blocksFromFile;
     }
 }
