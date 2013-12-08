@@ -8,7 +8,7 @@ public class DFile {
 	private ReadWriteLock _lock = new ReentrantReadWriteLock();
 	private int _file = -1;
 	private List<Integer> _indirectBlocks = null;
-	private List<Integer> _dataBlocksIntegers = null;
+	private List<Integer> _dataBlocks = null;
 	private int _size = -1;
 	private int _iNodeBlock = -1;
 	private int _iNodePosition = -1;
@@ -38,15 +38,15 @@ public class DFile {
 		return _indirectBlocks;
 	}
 
-	public void setIndirectBlocks(List<Integer> _indirectBlocks) {
-		this._indirectBlocks = _indirectBlocks;
+	public void setIndirectBlocks(List<Integer> indirectBlocks) {
+		this._indirectBlocks = indirectBlocks;
 	}
 
 	public int getSize() {
 		return _size;
 	}
 
-	public void setSize(int _size) {
+	public void setSize(int size) {
 		this._size = _size;
 	}
 
@@ -54,15 +54,23 @@ public class DFile {
 		return _iNodeBlock;
 	}
 
-	public void setINodeBlock(int _iNodeBlock) {
-		this._iNodeBlock = _iNodeBlock;
+	public void setINodeBlock(int iNodeBlock) {
+		this._iNodeBlock = iNodeBlock;
 	}
 
 	public int getINodePosition() {
 		return _iNodePosition;
 	}
 
-	public void setINodePosition(int _iNodePosition) {
-		this._iNodePosition = _iNodePosition;
+	public void setINodePosition(int iNodePosition) {
+		this._iNodePosition = iNodePosition;
+	}
+
+	public List<Integer> getDataBlocks() {
+		return _dataBlocks;
+	}
+
+	public void setDataBlocks(List<Integer> dataBlocks) {
+		this._dataBlocks = dataBlocks;
 	}
 }
