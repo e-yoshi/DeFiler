@@ -81,11 +81,15 @@ public class DFSImpl extends DFS {
 			// lock file writer, avoid readers from reading this file
 			file.getLock().writeLock().lock();
 			_lockedBlocks.add(file.getINodeBlock());
-			DBuffer dbuf = _cache.getBlock(file.getINodeBlock());
+			DBuffer dbuffer = _cache.getBlock(file.getINodeBlock());
+			if (!dbuffer.checkValid()) {
+				dbuffer.startFetch();
+				dbuffer.waitValid();
+			}
 			int position = file.getINodePosition();
 			byte[] buffer = new byte[Constants.INODE_SIZE];
-			dbuf.write(buffer, position, position + Constants.INODE_SIZE);
-			dbuf.startPush();
+			dbuffer.write(buffer, position, position + Constants.INODE_SIZE);
+			dbuffer.startPush();
 			synchronized (_usedBlocks) {
 				synchronized (_freeBlocks) {
 					// remove data blocks
@@ -175,8 +179,12 @@ public class DFSImpl extends DFS {
 		List<Integer> indirectBlocks = file.getIndirectBlocks();
 		List<Integer> blockIDs = new ArrayList<>();
 		for (int i : indirectBlocks) {
-			DBuffer buffer = _cache.getBlock(i);
-			byte[] bytes = buffer.getBuffer();
+			DBuffer dbuffer = _cache.getBlock(i);
+			if (!dbuffer.checkValid()) {
+				dbuffer.startFetch();
+				dbuffer.waitValid();
+			}
+			byte[] bytes = dbuffer.getBuffer();
 			try {
 				ByteArrayInputStream bos = new ByteArrayInputStream(bytes);
 				DataInputStream dos = new DataInputStream(bos);
@@ -205,14 +213,16 @@ public class DFSImpl extends DFS {
 			if (buf.read(buffer, i * Constants.INODE_SIZE, Constants.INODE_SIZE) == -1)
 				continue;
 			else {
-				integer = Arrays.copyOfRange(buffer, 4 * Constants.INODE_FID, 4 * (Constants.INODE_FID + 1));
+				integer = Arrays.copyOfRange(buffer, Constants.BYTES_PER_INT * Constants.INODE_FID,
+						Constants.BYTES_PER_INT * (Constants.INODE_FID + 1));
 				int fileId = ByteBuffer.wrap(integer).getInt();
-				integer = Arrays
-						.copyOfRange(buffer, 4 * Constants.INODE_FILE_SIZE, 4 * (Constants.INODE_FILE_SIZE + 1));
+				integer = Arrays.copyOfRange(buffer, 4 * Constants.INODE_FILE_SIZE, Constants.BYTES_PER_INT
+						* (Constants.INODE_FILE_SIZE + 1));
 				int fileSize = ByteBuffer.wrap(integer).getInt();
 				List<Integer> indirectBlocks = new ArrayList<>();
-				for (int j = Constants.POSITION_INDIRECT_BLOCK_REGION; j < (Constants.INODE_SIZE / 4); j++) {
-					integer = Arrays.copyOfRange(buffer, 4 * j, 4 * (j + 1));
+				for (int j = Constants.POSITION_INDIRECT_BLOCK_REGION; j < (Constants.INODE_SIZE / Constants.BYTES_PER_INT); j++) {
+					integer = Arrays
+							.copyOfRange(buffer, Constants.BYTES_PER_INT * j, Constants.BYTES_PER_INT * (j + 1));
 					int indBlock = ByteBuffer.wrap(integer).getInt();
 					if (indBlock > 0) {
 						indirectBlocks.add(indBlock);
@@ -240,6 +250,10 @@ public class DFSImpl extends DFS {
 				file.getLock().readLock().lock();
 				for (int i : file.getIndirectBlocks()) {
 					DBuffer indirectBlock = _cache.getBlock(i);
+					if (!indirectBlock.checkValid()) {
+						indirectBlock.startFetch();
+						indirectBlock.waitValid();
+					}
 					indirectBlock.read(buffer, 0, Constants.BLOCK_SIZE);
 					if (_usedBlocks.contains(i)) {
 						return false; // Only one file should map to one
@@ -247,7 +261,7 @@ public class DFSImpl extends DFS {
 					}
 					List<Integer> dataBlocks = new ArrayList<>();
 					for (int j = 0; j < Constants.INTS_IN_BLOCK; j++) {
-						integer = Arrays.copyOfRange(buffer, 4 * j, 4 * (j + 1));
+						integer = Arrays.copyOfRange(buffer, Constants.BYTES_PER_INT * j, Constants.BYTES_PER_INT * (j + 1));
 						int dataBlockId = ByteBuffer.wrap(integer).getInt();
 						if (dataBlockId == 0)
 							continue;

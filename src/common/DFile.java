@@ -47,7 +47,7 @@ public class DFile {
 	}
 
 	public void setSize(int size) {
-		this._size = _size;
+		this._size = size;
 	}
 
 	public int getINodeBlock() {
