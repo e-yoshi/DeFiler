@@ -27,7 +27,19 @@ public class DFSImpl extends DFS {
 	SortedSet<Integer> _freeBlocks = new TreeSet<Integer>();
 	Map<Integer, DFile> _fileMap = new HashMap<Integer, DFile>();
 	List<Integer> _lockedBlocks = new ArrayList<>();
+	
+	public DFSImpl() {
+		super();
+	}
+	
+	public DFSImpl(boolean format) {
+		super(format);
+	}
 
+	public DFSImpl(String volName, boolean format) {
+		super(volName, format);
+	}
+	
 	@Override
 	public void init() {
 		synchronized (_cache) {
