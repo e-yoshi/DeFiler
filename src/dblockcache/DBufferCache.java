@@ -9,6 +9,21 @@ import java.util.TreeSet;
 import virtualdisk.VirtualDisk;
 import common.Constants;
 
+/**
+ * This class represents the cache of the defiler. It keeps track of the free and used blocks
+ * in disk with the aid of a sorted set to always select the first block available. 
+ * It uses a map to easily find the debuffers in the cache and a queue to determine the LRU
+ * policy.
+ * It also contains methods of manipulation of the free blocks that are generally used by the DFS
+ * Every time the DFS requests a block to the cache, the cache first checks if it has it. It updates
+ * the position of the block in the LRU queue and returns it. If the block is not in the cache 
+ * but is allocated, it tries to fetch it first and then returns it. If the block is free, it
+ * simply updates the free list and returns a new dbuffer. Always making sure the maximum capacity
+ * is not reached and discarding the front of the queue if necessary
+ * 
+ * @author henriquemoraes
+ *
+ */
 public class DBufferCache {
 	
 	private VirtualDisk _disk;
