@@ -73,7 +73,7 @@ public class DFSImpl extends DFS {
 				if (_fileMap.containsKey(i)) {
 					continue;
 				}
-				_fileMap.put(i, new DFile(i));
+				_fileMap.put(i, writeInode(new DFile(i)));
 				return new DFileID(i);
 			}
 		}
@@ -401,5 +401,4 @@ public class DFSImpl extends DFS {
 		}
 		throw new IllegalStateException("File could not be written. Exceeded Inode Space");
 	}
-
 }
