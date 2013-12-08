@@ -99,6 +99,7 @@ public class DFSImpl extends DFS {
 					}
 				}
 			}
+			_fileMap.remove(file.getFileId());
 		}
 	}
 
