@@ -49,7 +49,7 @@ public class DFSImpl extends DFS {
 			_usedBlocks.add(i);
 		}
 		checkFileConsistency();
-		
+
 		// Find freeBlocks
 		for (int i = 1; i < _usedBlocks.last(); i++) {
 			if (!_usedBlocks.contains(i))
@@ -60,7 +60,14 @@ public class DFSImpl extends DFS {
 
 	@Override
 	public DFileID createDFile() {
-		// TODO Auto-generated method stub
+		synchronized (_fileMap) {
+			for (int i = 0; i < Constants.MAX_DFILES; i++) {
+				if (_fileMap.containsKey(i)) {
+					continue;
+				} 
+				return new DFileID(i);
+			}
+		}
 		return null;
 	}
 
@@ -105,7 +112,7 @@ public class DFSImpl extends DFS {
 
 	@Override
 	public void sync() {
-	    _cache.sync();
+		_cache.sync();
 	}
 
 	/**
@@ -178,13 +185,10 @@ public class DFSImpl extends DFS {
 		return true;
 	}
 	/*
-	private boolean checkFileIdBlockHeader(byte[] buffer, DFile file) {
-		byte[] integer = new byte[4];
-		integer = Arrays.copyOfRange(buffer, 0, 4);
-		int fileId = ByteBuffer.wrap(integer).getInt();
-		if (fileId != file.getFileId()) {
-			return false; // Indirect Block has the fileId in header
-		}
-		return true;
-	}*/
+	 * private boolean checkFileIdBlockHeader(byte[] buffer, DFile file) {
+	 * byte[] integer = new byte[4]; integer = Arrays.copyOfRange(buffer, 0, 4);
+	 * int fileId = ByteBuffer.wrap(integer).getInt(); if (fileId !=
+	 * file.getFileId()) { return false; // Indirect Block has the fileId in
+	 * header } return true; }
+	 */
 }
