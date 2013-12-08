@@ -48,7 +48,8 @@ public class DFSImpl extends DFS {
 		for (int i = 0; i < Constants.INODE_REGION_END; i++) {
 			_usedBlocks.add(i);
 		}
-
+		checkFileConsistency();
+		
 		// Find freeBlocks
 		for (int i = 1; i < _usedBlocks.last(); i++) {
 			if (!_usedBlocks.contains(i))
