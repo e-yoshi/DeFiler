@@ -360,7 +360,7 @@ public class DFSImpl extends DFS {
 						_cache.newUsedBlock(dataBlockId);
 						dataBlocks.add(dataBlockId);
 					}
-					file.setDataBlocks(dataBlocks);
+					
 				}
 				file.getLock().readLock().unlock();
 			}
