@@ -24,7 +24,8 @@ public class Constants {
 	public static final int INODE_FID = 0;
 	public static final int INODE_FILE_SIZE = 1;
 	public static final int INODES_IN_BLOCK = BLOCK_SIZE/INODE_SIZE;
-	public static final int INODE_REGION_END = MAX_DFILES/(BLOCK_SIZE/INODE_SIZE);
+	public static final int INODE_REGION_SIZE = (int) Math.ceil((double) MAX_DFILES/
+	                                                     ((double) BLOCK_SIZE/(double)INODE_SIZE));
 
 	
 	// Represents an error on a reading or writing operation on the dbuffer

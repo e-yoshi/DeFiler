@@ -23,8 +23,6 @@ import dblockcache.DBufferCache;
 public class DFSImpl extends DFS {
 
 	DBufferCache _cache;
-	SortedSet<Integer> _usedBlocks = new TreeSet<Integer>();
-	SortedSet<Integer> _freeBlocks = new TreeSet<Integer>();
 	Map<Integer, DFile> _fileMap = new HashMap<Integer, DFile>();
 	List<Integer> _lockedBlocks = new ArrayList<>();
 
@@ -55,22 +53,12 @@ public class DFSImpl extends DFS {
 			}
 		}
 		// Scan Inode Region for files and check file consistency
-		for (int i = 1; i <= Constants.INODE_REGION_END; i++) {
+		for (int i = 1; i <= Constants.INODE_REGION_SIZE; i++) {
 			DBuffer block = _cache.getBlock(i);
 			readInodes(block);
+		}
 
-		}
-		// Reserve INode Region
-		for (int i = 0; i < Constants.INODE_REGION_END; i++) {
-			_usedBlocks.add(i);
-		}
 		checkFileConsistency();
-
-		// Find freeBlocks
-		for (int i = 1; i < _usedBlocks.last(); i++) {
-			if (!_usedBlocks.contains(i))
-				_freeBlocks.add(i);
-		}
 
 	}
 
@@ -107,18 +95,11 @@ public class DFSImpl extends DFS {
 			byte[] buffer = new byte[Constants.INODE_SIZE];
 			dbuffer.write(buffer, position, position + Constants.INODE_SIZE);
 			dbuffer.startPush();
-			synchronized (_usedBlocks) {
-				synchronized (_freeBlocks) {
-					// remove data blocks
-					for (int indBlocks : file.getIndirectBlocks()) {
-						_usedBlocks.remove(indBlocks);
-						_freeBlocks.add(indBlocks);
-					}
-					for (int dataBlocks : file.getDataBlocks()) {
-						_usedBlocks.remove(dataBlocks);
-						_freeBlocks.add(dataBlocks);
-					}
-				}
+			for (int indBlocks : file.getIndirectBlocks()) {
+			    _cache.newUsedBlock(indBlocks);
+			}
+			for (int dataBlocks : file.getDataBlocks()) {
+			    _cache.newUsedBlock(dataBlocks);
 			}
 			_fileMap.remove(file.getFileId());
 		}
@@ -169,60 +150,41 @@ public class DFSImpl extends DFS {
                 // free blocks
                 deltaBlocks *= -1;
                 for (int i = blockIDs.size(); i > blockIDs.size() - deltaBlocks; i--) {
-                    synchronized (_freeBlocks) {
-                        _freeBlocks.add(blockIDs.get(i - 1));
-                    }
-                    synchronized (_allocatedBlocks) {
-                        _allocatedBlocks.remove(file.getMappedBlock(i - 1));
-                    }
+                    _cache.newFreeBlock(blockIDs.get(i - 1));
                 }
             }
             else {
                 // Adding blocks
-                for (int i = file.getNumBlocks(); i < file.getNumBlocks() + delta; i++) {
-                    if (_freeBlocks.size() > 0) {
-                        int newblock = _freeBlocks.first();
-                        synchronized (_freeBlocks) {
-                            _freeBlocks.remove(newblock);
-                        }
-                        synchronized (_allocatedBlocks) {
-                            _allocatedBlocks.add(newblock);
-                        }
-
-                        file.MapBlock(i, newblock);
+                for (int i = blockIDs.size(); i < blockIDs.size() + deltaBlocks; i++) {
+                    if (_cache.numOfFreeBlocks() > 0) {
+                        int newBlock = _cache.getNextFreeBlock();
+                        _cache.newUsedBlock(newBlock);
+                        blockIDs.add(newBlock);
                     }
                 }
             }
-            // Set the new size, make sure enough blocks were added
-            try {
-                file.setSize(count);
-            }
-            catch (Exception e) {
-                // Not enough blocks allocated
-                e.printStackTrace();
-            }
 
-            int nb = file.getNumBlocks();
-            int s = startOffset;
-            int done = count;
+            file.setSize(count);
 
-            for (int i = 0; i < nb; i++) {
-                DBuffer d = _cache.getBlock(file.getMappedBlock(i));
+            blockIDs = getMappedBlockIDs(file);
+            int start = startOffset;
+            int howMany = count;
 
+            //Actually write now
+            for (int i = 0; i < blockIDs.size(); i++) {
+                DBuffer d = _cache.getBlock(blockIDs.get(i));
                 if (!d.checkValid()) {
                     d.startFetch();
                     d.waitValid();
                 }
 
-                int wrote = d.write(ubuffer, s, done);
-                done -= wrote;
-                s += wrote;
+                int written = d.write(buffer, start, howMany);
+                howMany -= written;
+                start += written;
             }
 
-            updateINode(file);
-            file.unlockWrite();
+            file.getLock().writeLock().unlock();
             return count;
-		return 0;
 	}
 
 	@Override
@@ -343,10 +305,10 @@ public class DFSImpl extends DFS {
 						indirectBlock.startFetch();
 						indirectBlock.waitValid();
 					}
-					if (i > Constants.NUM_OF_BLOCKS || i < Constants.INODE_REGION_END)
+					if (i > Constants.NUM_OF_BLOCKS || i < Constants.INODE_REGION_SIZE)
 						throw new IllegalStateException("Invalid block index.");
 					indirectBlock.read(buffer, 0, Constants.BLOCK_SIZE);
-					if (_usedBlocks.contains(i)) {
+					if (_cache.containsUsedBlock(i)) {
 						throw new IllegalStateException("One block should only be mapped by one file.");
 					}
 					//read datablocks
@@ -357,12 +319,12 @@ public class DFSImpl extends DFS {
 						int dataBlockId = ByteBuffer.wrap(integer).getInt();
 						if (dataBlockId == 0)
 							continue;
-						if (dataBlockId > Constants.NUM_OF_BLOCKS || dataBlockId < Constants.INODE_REGION_END)
+						if (dataBlockId > Constants.NUM_OF_BLOCKS || dataBlockId < Constants.INODE_REGION_SIZE)
 							throw new IllegalStateException("Invalid block index.");
-						if (_usedBlocks.contains(dataBlockId)) {
+						if (_cache.containsUsedBlock(dataBlockId)) {
 							throw new IllegalStateException("One block should only be mapped by one file.");
 						}
-						_usedBlocks.add(dataBlockId);
+						_cache.newUsedBlock(dataBlockId);
 						dataBlocks.add(dataBlockId);
 					}
 					file.setDataBlocks(dataBlocks);
