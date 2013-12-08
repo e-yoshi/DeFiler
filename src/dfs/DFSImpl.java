@@ -125,6 +125,11 @@ public class DFSImpl extends DFS {
 		_cache.sync();
 	}
 	
+	/**
+	 * Maps the blocks from a file
+	 * @param file the file to have its blocks mapped
+	 * @return list with indexes of blocks with data
+	 */
 	private List<Integer> getMappedBlockIDs(DFile file) {
 	    List<Integer> indirectBlocks = file.getIndirectBlocks();
 	    List<Integer> blockIDs = new ArrayList<>();
