@@ -105,8 +105,7 @@ public class DFSImpl extends DFS {
 
 	@Override
 	public void sync() {
-		// TODO Auto-generated method stub
-
+	    _cache.sync();
 	}
 
 	/**
