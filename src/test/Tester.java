@@ -50,7 +50,7 @@ public class Tester implements Runnable {
 	}
 
 	private static void testDeleteDFiles() {
-		for (int i = 0; i < 512; i++) {
+		for (int i = 1; i < 512; i++) {
 			dfs.destroyDFile(new DFileID(i));
 		}
 	}
