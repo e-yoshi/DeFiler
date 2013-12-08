@@ -85,4 +85,8 @@ public class DFile {
 	    return (int) (Math.ceil((double) newSize/(double) Constants.BLOCK_SIZE)
 	            - Math.ceil((double) _size/(double) Constants.BLOCK_SIZE));
 	}
+	
+	public boolean isMapped() {
+	    return _inode.isMapped();
+	}
 }

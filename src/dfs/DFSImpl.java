@@ -161,7 +161,7 @@ public class DFSImpl extends DFS {
             }
 
             file.setSize(count);
-
+            
             blockIDs = getMappedBlockIDs(file);
             int start = startOffset;
             int howMany = count;
@@ -217,8 +217,10 @@ public class DFSImpl extends DFS {
 	 * @return list with indexes of blocks with data
 	 */
 	private List<Integer> getMappedBlockIDs(DFile file) {
+	    List<Integer> blockIDs = new ArrayList<>();
+	    if(!file.isMapped())
+	        return blockIDs;
 		List<Integer> indirectBlocks = file.getIndirectBlocks();
-		List<Integer> blockIDs = new ArrayList<>();
 		for (int i : indirectBlocks) {
 			DBuffer dbuffer = _cache.getBlock(i);
 			if (!dbuffer.checkValid()) {

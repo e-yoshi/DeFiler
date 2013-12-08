@@ -67,6 +67,7 @@ public class Inode {
         
         int subListStart = 0;
         int listSize = blocksInFile.size();
+        _indirectBlocks.clear();
         
         for (DBuffer buf : indirectBlocks) {      
             _indirectBlocks.add(buf.getBlockID());
