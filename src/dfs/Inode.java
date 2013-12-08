@@ -167,9 +167,17 @@ public class Inode {
         return _indirectBlocks;
     }
     
+    public int getSize() {
+        return _fileSize;
+    }
+    
     public void setSize(int size) {
         _fileSize = size;
         int numOfBlocks = (int) Math.ceil((double) _fileSize/(double) Constants.BLOCK_SIZE);
         _numOfIndirectBlocks = (int) Math.ceil((double) numOfBlocks/(double) Constants.INTS_IN_BLOCK);
+    }
+    
+    public void setIndirectBlocks(List<Integer> indirectBlocks) {
+        _indirectBlocks = indirectBlocks;
     }
 }

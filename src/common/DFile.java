@@ -42,19 +42,19 @@ public class DFile {
 	}
 
 	public List<Integer> getIndirectBlocks() {
-		return _indirectBlocks;
+		return _inode.getIndirectBlocks();
 	}
 
 	public void setIndirectBlocks(List<Integer> indirectBlocks) {
-		this._indirectBlocks = indirectBlocks;
+		_inode.setIndirectBlocks(indirectBlocks);
 	}
 
 	public int getSize() {
-		return _size;
+		return _inode.getSize();
 	}
 
 	public void setSize(int size) {
-		this._size = size;
+	    _inode.setSize(size);
 	}
 
 	public int getINodeBlock() {

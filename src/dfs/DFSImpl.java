@@ -298,7 +298,8 @@ public class DFSImpl extends DFS {
 				if (fileSize > Constants.MAX_FILE_SIZE) {
 					throw new IllegalStateException("Invalid File Size");
 				}
-				DFile file = new DFile(fileId, fileSize, indirectBlocks, buf.getBlockID(), i);
+				DFile file = new DFile(fileId, fileSize, buf.getBlockID(), i);
+				file.setIndirectBlocks(indirectBlocks);
 				if (_fileMap.containsKey(fileId)) {
 					throw new IllegalStateException("One Inode should only map to one file");
 				}
