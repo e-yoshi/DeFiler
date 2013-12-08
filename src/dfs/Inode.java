@@ -1,6 +1,8 @@
 package dfs;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -146,5 +148,26 @@ public class Inode {
      */
     public boolean isMapped() {
        return _isMapped;
+    }
+    
+    /**
+     * 
+     * @return The file id as an int that this inode represents
+     */
+    public int getFileID() {
+        if (!_isMapped) return Constants.DBUFFER_ERROR;
+        
+        try{
+            ByteArrayInputStream bos = new ByteArrayInputStream(_buffer);
+            DataInputStream dos = new DataInputStream(bos);
+            int id = dos.readInt();
+            dos.close();
+            // Create a new byte array of the correct size
+            return id;
+        } 
+        catch (IOException e) {
+            e.printStackTrace();
+            return Constants.DBUFFER_ERROR;
+        }
     }
 }
