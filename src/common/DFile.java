@@ -9,16 +9,20 @@ public class DFile {
 	private int _file = -1;
 	private List<Integer> _indirectBlocks = null;
 	private int _size = -1;
+	private int _iNodeBlock = -1;
+	private int _iNodePosition = -1;
 
 	public DFile(int fileId, int size) {
 		_file = fileId;
 		setSize(size);
 	}
 
-	public DFile(int fileId, int size, List<Integer> indirectBlocks) {
+	public DFile(int fileId, int size, List<Integer> indirectBlocks, int iNodeBlock, int iNodePosition) {
 		_file = fileId;
-		setSize(size);
+		_size = size;
 		_indirectBlocks = indirectBlocks;
+		_iNodeBlock = iNodeBlock;
+		_iNodePosition = iNodePosition;
 	}
 
 	public ReadWriteLock getLock() {

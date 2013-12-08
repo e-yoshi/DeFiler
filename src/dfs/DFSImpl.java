@@ -44,6 +44,11 @@ public class DFSImpl extends DFS {
 			DBuffer block = _cache.getBlock(i);
 			readInodes(block);
 		}
+		// Reserve INode Region
+		for (int i = 0; i < Constants.INODE_REGION_END; i++) {
+			_usedBlocks.add(i);
+		}
+
 		// Find freeBlocks
 		for (int i = 1; i < _usedBlocks.last(); i++) {
 			if (!_usedBlocks.contains(i))
@@ -105,8 +110,7 @@ public class DFSImpl extends DFS {
 
 	/**
 	 * Reads the Inodes from a DBuffer from the Inode region during
-	 * initialization Adds the used indirect blocks to the used blocks list and
-	 * checks for files consistency.
+	 * initialization.
 	 * 
 	 * @param buf
 	 */
@@ -117,7 +121,6 @@ public class DFSImpl extends DFS {
 			if (buf.read(buffer, i * Constants.INODE_SIZE, Constants.INODE_SIZE) == -1)
 				continue;
 			else {
-				_usedBlocks.add(buf.getBlockID());
 				integer = Arrays.copyOfRange(buffer, 4 * Constants.INODE_FID, 4 * (Constants.INODE_FID + 1));
 				int fileId = ByteBuffer.wrap(integer).getInt();
 				integer = Arrays
@@ -129,22 +132,61 @@ public class DFSImpl extends DFS {
 					int indBlock = ByteBuffer.wrap(integer).getInt();
 					if (indBlock > 0) {
 						indirectBlocks.add(indBlock);
-						_usedBlocks.add(indBlock);
 					}
 				}
-				DFile file = new DFile(fileId, fileSize, indirectBlocks);
+				DFile file = new DFile(fileId, fileSize, indirectBlocks, buf.getBlockID(), i);
 				_fileMap.put(fileId, file);
-				checkFileConsistency(file);
 			}
 		}
 	}
 
 	/**
-	 * Checks consistency of a DFile. Checks if the 
+	 * Checks consistency of a DFile. Finds the used blocks.
+	 * 
 	 * @param file
 	 */
-	private void checkFileConsistency(DFile file) {
+	private boolean checkFileConsistency() {
+		synchronized (_fileMap) {
+			byte[] buffer = new byte[32];
+			byte[] integer = new byte[4];
 
+			if (_fileMap.isEmpty())
+				return true;
+			for (DFile file : _fileMap.values()) {
+				for (int i : file.getIndirectBlocks()) {
+					DBuffer indirectBlock = _cache.getBlock(i);
+					indirectBlock.read(buffer, 0, Constants.BLOCK_SIZE);
+					if (_usedBlocks.contains(i)) {
+						return false; // Only one file should map to one
+										// indirect block
+					}
+					if (!checkFileIdBlockHeader(buffer, file))
+						return false;
+					for (int j = 1; j < Constants.INTS_IN_BLOCK; j++) {
+						integer = Arrays.copyOfRange(buffer, 4 * j, 4 * (j + 1));
+						int dataBlockId = ByteBuffer.wrap(integer).getInt();
+						if (dataBlockId == 0)
+							break;
+						if (_usedBlocks.contains(dataBlockId)) {
+							return false;
+						}
+
+						// Does datablock have a fileId in header?
+					}
+				}
+			}
+
+		}
+		return true;
 	}
 
+	private boolean checkFileIdBlockHeader(byte[] buffer, DFile file) {
+		byte[] integer = new byte[4];
+		integer = Arrays.copyOfRange(buffer, 0, 4);
+		int fileId = ByteBuffer.wrap(integer).getInt();
+		if (fileId != file.getFileId()) {
+			return false; // Indirect Block has the fileId in header
+		}
+		return true;
+	}
 }
