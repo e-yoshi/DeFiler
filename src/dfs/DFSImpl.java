@@ -10,18 +10,21 @@ import common.DFileID;
 import dblockcache.DBufferCache;
 
 public class DFSImpl extends DFS {
-	
+
 	DBufferCache _cache;
-	
+
 	@Override
 	public void init() {
 		synchronized (_cache) {
-			try {
-				_cache = new DBufferCache(Constants.NUM_OF_CACHE_BLOCKS, new VirtualDisk(super._volName, super._format));
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
+			if (_cache == null) {
+				try {
+					_cache = new DBufferCache(Constants.NUM_OF_CACHE_BLOCKS, new VirtualDisk(super._volName,
+							super._format));
+				} catch (FileNotFoundException e) {
+					e.printStackTrace();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
 		}
 	}
