@@ -23,6 +23,9 @@ public class Constants {
 	
 	public static final int INODE_FID = 0;
 	public static final int INODE_FILE_SIZE = 1;
+	public static final int INODES_IN_BLOCK = BLOCK_SIZE/INODE_SIZE;
+	public static final int INODE_REGION_END = MAX_DFILES/(BLOCK_SIZE/INODE_SIZE);
+
 	
 	// Represents an error on a reading or writing operation on the dbuffer
 	public static final int DBUFFER_ERROR = -1;
@@ -30,6 +33,7 @@ public class Constants {
 	public static final int INTS_IN_BLOCK = BLOCK_SIZE/4;
 	
 	public static final int POSITION_INDIRECT_BLOCK_REGION = 2;
+	
 	
 	public static byte EOF = (byte) 0x1ceb00da;
 	
