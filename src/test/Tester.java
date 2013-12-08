@@ -10,7 +10,7 @@ public class Tester{
 	private DFS dfs = new DFSImpl(true);
 	
 	public void main(String args[]) {
-		DFileID = dfs.createDFile();
+		DFileID fileId = dfs.createDFile();
 		
 	}
 }
