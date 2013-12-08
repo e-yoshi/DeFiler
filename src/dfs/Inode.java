@@ -180,4 +180,8 @@ public class Inode {
     public void setIndirectBlocks(List<Integer> indirectBlocks) {
         _indirectBlocks = indirectBlocks;
     }
+    
+    public void setMapped() {
+       _isMapped = true; 
+    }
 }

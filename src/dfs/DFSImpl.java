@@ -300,6 +300,7 @@ public class DFSImpl extends DFS {
 				}
 				DFile file = new DFile(fileId, fileSize, buf.getBlockID(), i);
 				file.setIndirectBlocks(indirectBlocks);
+				file.setMapped();
 				if (_fileMap.containsKey(fileId)) {
 					throw new IllegalStateException("One Inode should only map to one file");
 				}

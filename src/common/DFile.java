@@ -93,4 +93,8 @@ public class DFile {
 	public int getNumIndirectBlocks() {
 	    return _inode.getNumberOfIndirectBlocks();
 	}
+	
+	public void setMapped() {
+	    _inode.setMapped();
+	}
 }
