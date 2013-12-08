@@ -289,7 +289,11 @@ public class DFSImpl extends DFS {
 				integer = Arrays.copyOfRange(buffer, Constants.BYTES_PER_INT * Constants.INODE_FID,
 						Constants.BYTES_PER_INT * (Constants.INODE_FID + 1));
 				int fileId = ByteBuffer.wrap(integer).getInt();
-				if (fileId < 0 || fileId > 512) {
+				if (fileId == 0) {
+					continue;
+				}
+
+				if (fileId < 1 || fileId > 512) {
 					throw new IllegalStateException("Invalid DFileId value of: " + fileId);
 				}
 				integer = Arrays.copyOfRange(buffer, Constants.BYTES_PER_INT * Constants.INODE_FILE_SIZE,
@@ -360,7 +364,7 @@ public class DFSImpl extends DFS {
 						_cache.newUsedBlock(dataBlockId);
 						dataBlocks.add(dataBlockId);
 					}
-					
+
 				}
 				file.getLock().readLock().unlock();
 			}
@@ -378,11 +382,11 @@ public class DFSImpl extends DFS {
 			byte[] block = new byte[Constants.BLOCK_SIZE];
 			dbuffer.read(block, 0, Constants.BLOCK_SIZE);
 			byte[] integer = new byte[Constants.BYTES_PER_INT];
-			for(int j=0; j<Constants.INODES_IN_BLOCK; j++) {
-				int position = j*Constants.INODE_SIZE;
-				integer = Arrays.copyOfRange(block, position, position+Constants.BYTES_PER_INT);
+			for (int j = 0; j < Constants.INODES_IN_BLOCK; j++) {
+				int position = j * Constants.INODE_SIZE;
+				integer = Arrays.copyOfRange(block, position, position + Constants.BYTES_PER_INT);
 				int dfileId = ByteBuffer.wrap(integer).getInt();
-				if(dfileId == 0) {
+				if (dfileId == 0) {
 					dbuffer.write(file.getINodeMetadata(), position, Constants.INODE_SIZE);
 					file.setINodeBlock(i);
 					file.setINodePosition(j);
