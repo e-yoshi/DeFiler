@@ -161,17 +161,15 @@ public class DFSImpl extends DFS {
 						return false; // Only one file should map to one
 										// indirect block
 					}
-					if (!checkFileIdBlockHeader(buffer, file))
-						return false;
-					for (int j = 1; j < Constants.INTS_IN_BLOCK; j++) {
+					for (int j = 0; j < Constants.INTS_IN_BLOCK; j++) {
 						integer = Arrays.copyOfRange(buffer, 4 * j, 4 * (j + 1));
 						int dataBlockId = ByteBuffer.wrap(integer).getInt();
 						if (dataBlockId == 0)
-							break;
+							continue;
 						if (_usedBlocks.contains(dataBlockId)) {
 							return false;
 						}
-
+						_usedBlocks.add(dataBlockId);
 						// Does datablock have a fileId in header?
 					}
 				}
@@ -180,7 +178,7 @@ public class DFSImpl extends DFS {
 		}
 		return true;
 	}
-
+	/*
 	private boolean checkFileIdBlockHeader(byte[] buffer, DFile file) {
 		byte[] integer = new byte[4];
 		integer = Arrays.copyOfRange(buffer, 0, 4);
@@ -189,5 +187,5 @@ public class DFSImpl extends DFS {
 			return false; // Indirect Block has the fileId in header
 		}
 		return true;
-	}
+	}*/
 }
