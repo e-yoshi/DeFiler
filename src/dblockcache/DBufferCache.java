@@ -144,8 +144,4 @@ public class DBufferCache {
 	public int getInodeRegionSize() {
 	    return inodeRegionSize;
 	}
-	
-	public Inode createInode(int fileID, int fileSize) {
-	    
-	}
 }
