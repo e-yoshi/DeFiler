@@ -128,7 +128,7 @@ public class DBuffer {
 	 * If it hits the end of the file, it returns the number of bytes read up
 	 * to that point
 	 */
-	public int read(byte[] buffer, int startOffset, int count) {
+	public synchronized int read(byte[] buffer, int startOffset, int count) {
 	    
 	    if(startOffset + count > buffer.length || startOffset < 0)
                 return Constants.DBUFFER_ERROR;
