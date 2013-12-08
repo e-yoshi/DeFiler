@@ -155,7 +155,73 @@ public class DFSImpl extends DFS {
 
 	@Override
 	public int write(DFileID dFID, byte[] buffer, int startOffset, int count) {
-		// TODO Auto-generated method stub
+	    DFile file = _fileMap.get(dFID.getDFileID());
+            if (file == null) {
+                System.out.println("Error: bad file request");
+                return Constants.DBUFFER_ERROR;
+            }
+            file.getLock().writeLock().lock();
+            
+            List<Integer> blockIDs = getMappedBlockIDs(file);
+            int deltaBlocks = file.deltaBlocks(count);
+            
+            if (deltaBlocks < 0) {
+                // free blocks
+                deltaBlocks *= -1;
+                for (int i = blockIDs.size(); i > blockIDs.size() - deltaBlocks; i--) {
+                    synchronized (_freeBlocks) {
+                        _freeBlocks.add(blockIDs.get(i - 1));
+                    }
+                    synchronized (_allocatedBlocks) {
+                        _allocatedBlocks.remove(file.getMappedBlock(i - 1));
+                    }
+                }
+            }
+            else {
+                // Adding blocks
+                for (int i = file.getNumBlocks(); i < file.getNumBlocks() + delta; i++) {
+                    if (_freeBlocks.size() > 0) {
+                        int newblock = _freeBlocks.first();
+                        synchronized (_freeBlocks) {
+                            _freeBlocks.remove(newblock);
+                        }
+                        synchronized (_allocatedBlocks) {
+                            _allocatedBlocks.add(newblock);
+                        }
+
+                        file.MapBlock(i, newblock);
+                    }
+                }
+            }
+            // Set the new size, make sure enough blocks were added
+            try {
+                file.setSize(count);
+            }
+            catch (Exception e) {
+                // Not enough blocks allocated
+                e.printStackTrace();
+            }
+
+            int nb = file.getNumBlocks();
+            int s = startOffset;
+            int done = count;
+
+            for (int i = 0; i < nb; i++) {
+                DBuffer d = _cache.getBlock(file.getMappedBlock(i));
+
+                if (!d.checkValid()) {
+                    d.startFetch();
+                    d.waitValid();
+                }
+
+                int wrote = d.write(ubuffer, s, done);
+                done -= wrote;
+                s += wrote;
+            }
+
+            updateINode(file);
+            file.unlockWrite();
+            return count;
 		return 0;
 	}
 

@@ -41,8 +41,8 @@ public class Inode {
         System.arraycopy(someMetadata.length, 0, _buffer, 0, someMetadata.length);
         
         //Assuming size is given in bytes instead of blocks
-        int numOfBlocks = (int) Math.ceil(_fileSize/Constants.BLOCK_SIZE);
-        _numOfIndirectBlocks = (int) Math.ceil(numOfBlocks/Constants.INTS_IN_BLOCK);
+        int numOfBlocks = (int) Math.ceil((double) _fileSize/(double) Constants.BLOCK_SIZE);
+        _numOfIndirectBlocks = (int) Math.ceil((double) numOfBlocks/(double) Constants.INTS_IN_BLOCK);
     }
     
     /**

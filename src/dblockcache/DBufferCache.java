@@ -47,8 +47,9 @@ public class DBufferCache {
 	
 	private void initializeCache() {
 	    
-	    int inodesInBlock = (int) Math.ceil(Constants.BLOCK_SIZE/Constants.INODE_SIZE);
-	    inodeRegionSize = (int) Math.ceil(Constants.MAX_DFILES/inodesInBlock);
+	    int inodesInBlock = (int) Math.ceil((double) Constants.BLOCK_SIZE/
+	                                        (double) Constants.INODE_SIZE);
+	    inodeRegionSize = (int) Math.ceil((double) Constants.MAX_DFILES/(double) inodesInBlock);
 	    
 	    //Skip block zero and inode region
 	    for (int i = inodeRegionSize + 1; i < Constants.NUM_OF_BLOCKS; i++) {
@@ -143,4 +144,28 @@ public class DBufferCache {
 	public int getInodeRegionSize() {
 	    return inodeRegionSize;
 	}
+	
+	public boolean containsUsedBlock(Integer ID) {
+	    return !_freeBlocksInDisk.contains(ID);
+	}
+	
+	public boolean containsFreeBlock(Integer ID) {
+	    return _freeBlocksInDisk.contains(ID);
+	}
+	
+	public void newFreeBlock(Integer ID) {
+	    synchronized(_freeBlocksInDisk) {
+	        _freeBlocksInDisk.add(ID);
+	    }
+	}
+	
+	public void newUsedBlock(Integer ID) {
+            synchronized(_freeBlocksInDisk) {
+                if(!_freeBlocksInDisk.contains(ID)) {
+                    System.out.println("Block was already allocated");
+                    return;
+                }
+                _freeBlocksInDisk.add(ID);
+            }
+        }
 }
