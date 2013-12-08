@@ -33,16 +33,13 @@ public class Inode {
     public Inode(int fileID, int size) {
         _isMapped = false;
         _FID = fileID;
-        _fileSize = size;
+        setSize(size);
         _buffer = new byte[Constants.INODE_SIZE];
         _indirectBlocks = new ArrayList<>();
 
         byte[] someMetadata = writeInts(_FID, _fileSize);
         System.arraycopy(someMetadata.length, 0, _buffer, 0, someMetadata.length);
         
-        //Assuming size is given in bytes instead of blocks
-        int numOfBlocks = (int) Math.ceil((double) _fileSize/(double) Constants.BLOCK_SIZE);
-        _numOfIndirectBlocks = (int) Math.ceil((double) numOfBlocks/(double) Constants.INTS_IN_BLOCK);
     }
     
     /**
@@ -168,5 +165,11 @@ public class Inode {
      */
     public List<Integer> getIndirectBlocks() {
         return _indirectBlocks;
+    }
+    
+    public void setSize(int size) {
+        _fileSize = size;
+        int numOfBlocks = (int) Math.ceil((double) _fileSize/(double) Constants.BLOCK_SIZE);
+        _numOfIndirectBlocks = (int) Math.ceil((double) numOfBlocks/(double) Constants.INTS_IN_BLOCK);
     }
 }

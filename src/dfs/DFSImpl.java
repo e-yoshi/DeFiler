@@ -161,6 +161,30 @@ public class DFSImpl extends DFS {
             }
 
             file.setSize(count);
+            List<DBuffer> indirect = new ArrayList<>();
+            if (!file.isMapped()) {    
+                for (int i = 0; i < file.getNumIndirectBlocks(); i++) {
+                    int newBlock = _cache.getNextFreeBlock();
+                    DBuffer dbuffer = _cache.getBlock(newBlock);
+                    indirect.add(dbuffer);
+                    if (!dbuffer.checkValid()) {
+                            dbuffer.startFetch();
+                            dbuffer.waitValid();
+                    }
+                    
+                }
+            }
+            else {
+                for (Integer i : file.getIndirectBlocks()) {
+                    DBuffer dbuffer = _cache.getBlock(i);
+                    indirect.add(dbuffer);
+                    if (!dbuffer.checkValid()) {
+                            dbuffer.startFetch();
+                            dbuffer.waitValid();
+                    }    
+                }
+            }
+            file.mapFile(indirect, blockIDs);
             
             blockIDs = getMappedBlockIDs(file);
             int start = startOffset;

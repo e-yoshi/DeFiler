@@ -89,4 +89,8 @@ public class DFile {
 	public boolean isMapped() {
 	    return _inode.isMapped();
 	}
+	
+	public int getNumIndirectBlocks() {
+	    return _inode.getNumberOfIndirectBlocks();
+	}
 }
