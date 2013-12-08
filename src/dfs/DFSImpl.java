@@ -1,5 +1,7 @@
 package dfs;
 
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -85,7 +87,9 @@ public class DFSImpl extends DFS {
 
 	@Override
 	public int read(DFileID dFID, byte[] buffer, int startOffset, int count) {
-		// TODO Auto-generated method stub
+		DFile file = _fileMap.get(dFID.getDFileID());
+		List<Integer> indirectBlocks = file.getIndirectBlocks();
+		
 		return 0;
 	}
 
@@ -119,6 +123,28 @@ public class DFSImpl extends DFS {
 	@Override
 	public void sync() {
 		_cache.sync();
+	}
+	
+	private List<Integer> getMappedBlockIDs(DFile file) {
+	    List<Integer> indirectBlocks = file.getIndirectBlocks();
+	    List<Integer> blockIDs = new ArrayList<>();
+	    for (int i : indirectBlocks) {
+	        DBuffer buffer = _cache.getBlock(i);
+	        byte[] bytes = buffer.getBuffer();
+	        try{
+	            ByteArrayInputStream bos = new ByteArrayInputStream(bytes);
+	            DataInputStream dos = new DataInputStream(bos);
+	            while(dos.available() >= Constants.BYTES_PER_INT) {
+	                blockIDs.add(dos.readInt());
+	            }
+	            dos.close();
+	            // Create a new byte array of the correct size
+	        } 
+	        catch (IOException e) {
+	            e.printStackTrace();
+	        }
+	    }
+	    return blockIDs;
 	}
 
 	/**

@@ -30,7 +30,9 @@ public class Constants {
 	// Represents an error on a reading or writing operation on the dbuffer
 	public static final int DBUFFER_ERROR = -1;
 	
-	public static final int INTS_IN_BLOCK = BLOCK_SIZE/4;
+	public static final int BYTES_PER_INT = 4;
+	
+	public static final int INTS_IN_BLOCK = BLOCK_SIZE/BYTES_PER_INT;
 	
 	public static final int POSITION_INDIRECT_BLOCK_REGION = 2;
 	
