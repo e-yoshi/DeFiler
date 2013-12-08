@@ -125,6 +125,7 @@ public class DBufferCache {
 	    for (Integer i : _blocksInCache.keySet()) {
 	        DBuffer buffer = _blocksInCache.get(i);
 	        buffer.startPush();
+	        buffer.waitClean();
 	    }
 	}
 	

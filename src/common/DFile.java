@@ -9,7 +9,6 @@ import dfs.Inode;
 public class DFile {
 	private ReadWriteLock _lock = new ReentrantReadWriteLock();
 	private int _file = -1;
-	private int _size = -1;
 	private int _iNodeBlock = -1;
 	private int _iNodePosition = -1;
 	private Inode _inode;
@@ -20,7 +19,6 @@ public class DFile {
 
 	public DFile(int fileId, int size, int iNodeBlock, int iNodePosition) {
 		_file = fileId;
-		_size = size;
 		setINodeBlock(iNodeBlock);
 		setINodePosition(iNodePosition);
 		_inode = new Inode(fileId, size);
@@ -72,7 +70,7 @@ public class DFile {
 	
 	public int deltaBlocks(int newSize) {
 	    return (int) (Math.ceil((double) newSize/(double) Constants.BLOCK_SIZE)
-	            - Math.ceil((double) _size/(double) Constants.BLOCK_SIZE));
+	            - Math.ceil((double) _inode.getSize()/(double) Constants.BLOCK_SIZE));
 	}
 	
 	public boolean isMapped() {
