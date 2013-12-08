@@ -8,6 +8,7 @@ public class DFile {
 	private ReadWriteLock _lock = new ReentrantReadWriteLock();
 	private int _file = -1;
 	private List<Integer> _indirectBlocks = null;
+	private List<Integer> _dataBlocksIntegers = null;
 	private int _size = -1;
 	private int _iNodeBlock = -1;
 	private int _iNodePosition = -1;

@@ -26,6 +26,7 @@ public class DFSImpl extends DFS {
 	SortedSet<Integer> _usedBlocks = new TreeSet<Integer>();
 	SortedSet<Integer> _freeBlocks = new TreeSet<Integer>();
 	Map<Integer, DFile> _fileMap = new HashMap<Integer, DFile>();
+	List<Integer> _lockedBlocks = new ArrayList<>();
 
 	@Override
 	public void init() {
@@ -66,7 +67,7 @@ public class DFSImpl extends DFS {
 			for (int i = 0; i < Constants.MAX_DFILES; i++) {
 				if (_fileMap.containsKey(i)) {
 					continue;
-				} 
+				}
 				return new DFileID(i);
 			}
 		}
@@ -77,11 +78,23 @@ public class DFSImpl extends DFS {
 	public void destroyDFile(DFileID dFID) {
 		synchronized (_fileMap) {
 			DFile file = _fileMap.get(dFID.getDFileID());
-			//lock file writer, avoid readers from reading this file
+			// lock file writer, avoid readers from reading this file
 			file.getLock().writeLock().lock();
+			_lockedBlocks.add(file.getINodeBlock());
 			DBuffer dbuf = _cache.getBlock(file.getINodeBlock());
-			byte[] buffer = dbuf.getBuffer();
-			
+			int position = file.getINodePosition();
+			byte[] buffer = new byte[Constants.INODE_SIZE];
+			dbuf.write(buffer, position, position + Constants.INODE_SIZE);
+			dbuf.startPush();
+			synchronized (_usedBlocks) {
+				synchronized (_freeBlocks) {
+					//remove data blocks
+					for (int indBlocks : file.getIndirectBlocks()) {
+						_usedBlocks.remove(indBlocks);
+						_freeBlocks.add(indBlocks);
+					}
+				}
+			}
 		}
 	}
 
