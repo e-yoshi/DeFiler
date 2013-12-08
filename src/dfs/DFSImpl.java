@@ -10,8 +10,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.SortedSet;
-import java.util.TreeSet;
 
 import virtualdisk.VirtualDisk;
 import common.Constants;
@@ -24,7 +22,6 @@ public class DFSImpl extends DFS {
 
 	DBufferCache _cache;
 	Map<Integer, DFile> _fileMap = new HashMap<Integer, DFile>();
-	List<Integer> _lockedBlocks = new ArrayList<>();
 
 	public DFSImpl() {
 		super();
@@ -67,7 +64,7 @@ public class DFSImpl extends DFS {
 				if (_fileMap.containsKey(i)) {
 					continue;
 				}
-				_fileMap.put(i, null);
+				_fileMap.put(i, new DFile(i));
 				return new DFileID(i);
 			}
 		}
@@ -84,7 +81,6 @@ public class DFSImpl extends DFS {
 			}
 			// lock file writer, avoid readers from reading this file
 			file.getLock().writeLock().lock();
-			_lockedBlocks.add(file.getINodeBlock());
 			DBuffer dbuffer = _cache.getBlock(file.getINodeBlock());
 			if (!dbuffer.checkValid()) {
 				dbuffer.startFetch();

@@ -2,7 +2,6 @@ package dblockcache;
 
 import java.util.ArrayDeque;
 import java.util.Map;
-import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.SortedSet;
 import java.util.TreeMap;

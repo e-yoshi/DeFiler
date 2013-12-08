@@ -13,9 +13,8 @@ public class DFile {
 	private int _iNodeBlock = -1;
 	private int _iNodePosition = -1;
 
-	public DFile(int fileId, int size) {
+	public DFile(int fileId) {
 		_file = fileId;
-		setSize(size);
 	}
 
 	public DFile(int fileId, int size, List<Integer> indirectBlocks, int iNodeBlock, int iNodePosition) {
