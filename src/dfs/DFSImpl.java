@@ -64,7 +64,7 @@ public class DFSImpl extends DFS {
 				if (_fileMap.containsKey(i)) {
 					continue;
 				}
-				_fileMap.put(i, new DFile(i));
+				_fileMap.put(i, writeInode(new DFile(i)));
 				return new DFileID(i);
 			}
 		}
@@ -279,14 +279,21 @@ public class DFSImpl extends DFS {
 		for (int i = 0; i < Constants.INODES_IN_BLOCK; i++) {
 			byte[] buffer = new byte[Constants.INODE_SIZE];
 			byte[] integer = new byte[4];
-			if (buf.read(buffer, i * Constants.INODE_SIZE, Constants.INODE_SIZE) == -1)
+			if (!buf.checkValid()) {
+				buf.startFetch();
+				buf.waitValid();
+			}
+			if (buf.read(buffer, i * Constants.INODE_SIZE, i * (Constants.INODE_SIZE + 1)) == -1)
 				continue;
 			else {
 				integer = Arrays.copyOfRange(buffer, Constants.BYTES_PER_INT * Constants.INODE_FID,
 						Constants.BYTES_PER_INT * (Constants.INODE_FID + 1));
 				int fileId = ByteBuffer.wrap(integer).getInt();
-				integer = Arrays.copyOfRange(buffer, 4 * Constants.INODE_FILE_SIZE, Constants.BYTES_PER_INT
-						* (Constants.INODE_FILE_SIZE + 1));
+				if (fileId < 0 || fileId > 512) {
+					throw new IllegalStateException("Invalid DFileId value of: " + fileId);
+				}
+				integer = Arrays.copyOfRange(buffer, Constants.BYTES_PER_INT * Constants.INODE_FILE_SIZE,
+						Constants.BYTES_PER_INT * (Constants.INODE_FILE_SIZE + 1));
 				int fileSize = ByteBuffer.wrap(integer).getInt();
 				List<Integer> indirectBlocks = new ArrayList<>();
 				for (int j = Constants.POSITION_INDIRECT_BLOCK_REGION; j < (Constants.INODE_SIZE / Constants.BYTES_PER_INT); j++) {
@@ -359,5 +366,30 @@ public class DFSImpl extends DFS {
 			}
 
 		}
+	}
+
+	private DFile writeInode(DFile file) {
+		for (int i = 1; i <= Constants.INODE_REGION_SIZE; i++) {
+			DBuffer dbuffer = _cache.getBlock(i);
+			if (!dbuffer.checkValid()) {
+				dbuffer.startFetch();
+				dbuffer.waitValid();
+			}
+			byte[] block = new byte[Constants.BLOCK_SIZE];
+			dbuffer.read(block, 0, Constants.BLOCK_SIZE);
+			byte[] integer = new byte[Constants.BYTES_PER_INT];
+			for(int j=0; j<Constants.INODES_IN_BLOCK; j++) {
+				int position = j*Constants.INODE_SIZE;
+				integer = Arrays.copyOfRange(block, position, position+Constants.BYTES_PER_INT);
+				int dfileId = ByteBuffer.wrap(integer).getInt();
+				if(dfileId == 0) {
+					dbuffer.write(file.getINodeMetadata(), position, Constants.INODE_SIZE);
+					file.setINodeBlock(i);
+					file.setINodePosition(j);
+					return file;
+				}
+			}
+		}
+		throw new IllegalStateException("File could not be written. Exceeded Inode Space");
 	}
 }

@@ -17,6 +17,8 @@ public class DFile {
 
 	public DFile(int fileId) {
 		_file = fileId;
+		_size = 0;
+		_inode = new Inode(fileId, 0);
 	}
 
 	public DFile(int fileId, int size, int iNodeBlock, int iNodePosition) {
@@ -71,6 +73,9 @@ public class DFile {
 		this._iNodePosition = iNodePosition;
 	}
 
+	public byte[] getINodeMetadata() {
+		return _inode.getMetadata();
+	}
 	public List<Integer> getDataBlocks() {
 		return _dataBlocks;
 	}
