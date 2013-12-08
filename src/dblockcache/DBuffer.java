@@ -142,11 +142,11 @@ public class DBuffer {
             
             // read into dBuff
             for (int i = 0; i < count; i++) {
-               
-                if(_dBuffer[i] == Constants.EOF) 
-                    return i;
                 
                 buffer[i + startOffset] = _dBuffer[i];
+                
+                if(_dBuffer[i] == Constants.EOF) 
+                    return i;
             }
               
             notifyAll();

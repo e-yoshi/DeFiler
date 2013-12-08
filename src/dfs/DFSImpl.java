@@ -88,9 +88,30 @@ public class DFSImpl extends DFS {
 	@Override
 	public int read(DFileID dFID, byte[] buffer, int startOffset, int count) {
 		DFile file = _fileMap.get(dFID.getDFileID());
-		List<Integer> indirectBlocks = file.getIndirectBlocks();
-		
-		return 0;
+		if (file == null) {
+		    System.out.println("Error: bad file request");
+		    return Constants.DBUFFER_ERROR;
+		}
+		List<Integer> blockIDs = getMappedBlockIDs(file);
+		file.getLock().readLock().lock();
+		int size = blockIDs.size();
+	        int start = startOffset;
+	        int howMany = count;
+
+	        for (int i = 0; i < size; i++) {
+	            DBuffer dbuffer = _cache.getBlock(blockIDs.get(i));
+	            
+	            if (!dbuffer.checkValid()) {
+	                dbuffer.startFetch();
+	                dbuffer.waitValid();
+	            }
+
+	            int read = dbuffer.read(buffer, start, howMany);
+	            howMany -= read;
+	            start += read;
+	        }
+	        file.getLock().readLock().unlock();
+	        return count;
 	}
 
 	@Override
