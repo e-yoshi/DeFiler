@@ -88,10 +88,14 @@ public class DFSImpl extends DFS {
 			dbuf.startPush();
 			synchronized (_usedBlocks) {
 				synchronized (_freeBlocks) {
-					//remove data blocks
+					// remove data blocks
 					for (int indBlocks : file.getIndirectBlocks()) {
 						_usedBlocks.remove(indBlocks);
 						_freeBlocks.add(indBlocks);
+					}
+					for (int dataBlocks : file.getDataBlocks()) {
+						_usedBlocks.remove(dataBlocks);
+						_freeBlocks.add(dataBlocks);
 					}
 				}
 			}
@@ -102,29 +106,29 @@ public class DFSImpl extends DFS {
 	public int read(DFileID dFID, byte[] buffer, int startOffset, int count) {
 		DFile file = _fileMap.get(dFID.getDFileID());
 		if (file == null) {
-		    System.out.println("Error: bad file request");
-		    return Constants.DBUFFER_ERROR;
+			System.out.println("Error: bad file request");
+			return Constants.DBUFFER_ERROR;
 		}
 		List<Integer> blockIDs = getMappedBlockIDs(file);
 		file.getLock().readLock().lock();
 		int size = blockIDs.size();
-	        int start = startOffset;
-	        int howMany = count;
+		int start = startOffset;
+		int howMany = count;
 
-	        for (int i = 0; i < size; i++) {
-	            DBuffer dbuffer = _cache.getBlock(blockIDs.get(i));
-	            
-	            if (!dbuffer.checkValid()) {
-	                dbuffer.startFetch();
-	                dbuffer.waitValid();
-	            }
+		for (int i = 0; i < size; i++) {
+			DBuffer dbuffer = _cache.getBlock(blockIDs.get(i));
 
-	            int read = dbuffer.read(buffer, start, howMany);
-	            howMany -= read;
-	            start += read;
-	        }
-	        file.getLock().readLock().unlock();
-	        return count;
+			if (!dbuffer.checkValid()) {
+				dbuffer.startFetch();
+				dbuffer.waitValid();
+			}
+
+			int read = dbuffer.read(buffer, start, howMany);
+			howMany -= read;
+			start += read;
+		}
+		file.getLock().readLock().unlock();
+		return count;
 	}
 
 	@Override
@@ -158,32 +162,33 @@ public class DFSImpl extends DFS {
 	public void sync() {
 		_cache.sync();
 	}
-	
+
 	/**
 	 * Maps the blocks from a file
-	 * @param file the file to have its blocks mapped
+	 * 
+	 * @param file
+	 *            the file to have its blocks mapped
 	 * @return list with indexes of blocks with data
 	 */
 	private List<Integer> getMappedBlockIDs(DFile file) {
-	    List<Integer> indirectBlocks = file.getIndirectBlocks();
-	    List<Integer> blockIDs = new ArrayList<>();
-	    for (int i : indirectBlocks) {
-	        DBuffer buffer = _cache.getBlock(i);
-	        byte[] bytes = buffer.getBuffer();
-	        try{
-	            ByteArrayInputStream bos = new ByteArrayInputStream(bytes);
-	            DataInputStream dos = new DataInputStream(bos);
-	            while(dos.available() >= Constants.BYTES_PER_INT) {
-	                blockIDs.add(dos.readInt());
-	            }
-	            dos.close();
-	            // Create a new byte array of the correct size
-	        } 
-	        catch (IOException e) {
-	            e.printStackTrace();
-	        }
-	    }
-	    return blockIDs;
+		List<Integer> indirectBlocks = file.getIndirectBlocks();
+		List<Integer> blockIDs = new ArrayList<>();
+		for (int i : indirectBlocks) {
+			DBuffer buffer = _cache.getBlock(i);
+			byte[] bytes = buffer.getBuffer();
+			try {
+				ByteArrayInputStream bos = new ByteArrayInputStream(bytes);
+				DataInputStream dos = new DataInputStream(bos);
+				while (dos.available() >= Constants.BYTES_PER_INT) {
+					blockIDs.add(dos.readInt());
+				}
+				dos.close();
+				// Create a new byte array of the correct size
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		return blockIDs;
 	}
 
 	/**
@@ -239,6 +244,7 @@ public class DFSImpl extends DFS {
 						return false; // Only one file should map to one
 										// indirect block
 					}
+					List<Integer> dataBlocks = new ArrayList<>();
 					for (int j = 0; j < Constants.INTS_IN_BLOCK; j++) {
 						integer = Arrays.copyOfRange(buffer, 4 * j, 4 * (j + 1));
 						int dataBlockId = ByteBuffer.wrap(integer).getInt();
@@ -248,8 +254,10 @@ public class DFSImpl extends DFS {
 							return false;
 						}
 						_usedBlocks.add(dataBlockId);
+						dataBlocks.add(dataBlockId);
 						// Does datablock have a fileId in header?
 					}
+					file.setDataBlocks(dataBlocks);
 				}
 				file.getLock().readLock().unlock();
 			}
