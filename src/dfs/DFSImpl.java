@@ -43,13 +43,12 @@ public class DFSImpl extends DFS {
 		for (int i = 1; i <= Constants.INODE_REGION_END; i++) {
 			DBuffer block = _cache.getBlock(i);
 			readInodes(block);
-		}	
-		//Find freeBlocks
-		for(int i=1; i<_usedBlocks.last(); i++) {
-			if(!_usedBlocks.contains(i))
+		}
+		// Find freeBlocks
+		for (int i = 1; i < _usedBlocks.last(); i++) {
+			if (!_usedBlocks.contains(i))
 				_freeBlocks.add(i);
 		}
-		
 
 	}
 
@@ -79,8 +78,10 @@ public class DFSImpl extends DFS {
 
 	@Override
 	public int sizeDFile(DFileID dFID) {
-		// TODO Auto-generated method stub
-		return 0;
+		synchronized (_fileMap) {
+			DFile file = _fileMap.get(dFID.getDFileID());
+			return file.getSize();
+		}
 	}
 
 	@Override
@@ -101,7 +102,7 @@ public class DFSImpl extends DFS {
 		// TODO Auto-generated method stub
 
 	}
-	
+
 	private void readInodes(DBuffer buf) {
 		for (int i = 0; i < Constants.INODES_IN_BLOCK; i++) {
 			byte[] buffer = new byte[Constants.INODE_SIZE];
@@ -130,7 +131,7 @@ public class DFSImpl extends DFS {
 			}
 		}
 	}
-	
+
 	private void checkFileConsistency(DFile file) {
 	}
 

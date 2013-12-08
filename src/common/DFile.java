@@ -12,12 +12,12 @@ public class DFile {
 
 	public DFile(int fileId, int size) {
 		_file = fileId;
-		_size = size;
+		setSize(size);
 	}
 
 	public DFile(int fileId, int size, List<Integer> indirectBlocks) {
 		_file = fileId;
-		_size = size;
+		setSize(size);
 		_indirectBlocks = indirectBlocks;
 	}
 
@@ -35,5 +35,13 @@ public class DFile {
 
 	public void setIndirectBlocks(List<Integer> _indirectBlocks) {
 		this._indirectBlocks = _indirectBlocks;
+	}
+
+	public int getSize() {
+		return _size;
+	}
+
+	public void setSize(int _size) {
+		this._size = _size;
 	}
 }
