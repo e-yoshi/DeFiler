@@ -7,7 +7,6 @@ import java.util.Queue;
 import java.util.TreeMap;
 import virtualdisk.VirtualDisk;
 import common.Constants;
-import dfs.Inode;
 
 public class DBufferCache {
 	
