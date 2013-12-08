@@ -90,11 +90,16 @@ public class DFSImpl extends DFS {
 			byte[] buffer = new byte[Constants.INODE_SIZE];
 			dbuffer.write(buffer, position, position + Constants.INODE_SIZE);
 			dbuffer.startPush();
-			for (int indBlocks : file.getIndirectBlocks()) {
-			    _cache.newFreeBlock(indBlocks);
+			if (file.getIndirectBlocks() != null && !file.getIndirectBlocks().isEmpty()) {
+				for (int indBlocks : file.getIndirectBlocks()) {
+					_cache.newFreeBlock(indBlocks);
+				}
 			}
-			for (Integer dataBlocks : getMappedBlockIDs(file)) {
-			    _cache.newFreeBlock(dataBlocks);
+			List<Integer> mappedBlocks = getMappedBlockIDs(file);
+			if (mappedBlocks != null && !mappedBlocks.isEmpty()) {
+				for (Integer dataBlocks : getMappedBlockIDs(file)) {
+					_cache.newFreeBlock(dataBlocks);
+				}
 			}
 			_fileMap.remove(file.getFileId());
 		}
@@ -112,7 +117,6 @@ public class DFSImpl extends DFS {
 		int size = blockIDs.size();
 		int start = startOffset;
 		int howMany = count;
-		
 
 		for (int i = 0; i < size; i++) {
 			DBuffer dbuffer = _cache.getBlock(blockIDs.get(i));
@@ -132,79 +136,77 @@ public class DFSImpl extends DFS {
 
 	@Override
 	public int write(DFileID dFID, byte[] buffer, int startOffset, int count) {
-	    DFile file = _fileMap.get(dFID.getDFileID());
-            if (file == null) {
-                System.out.println("Error: bad file request");
-                return Constants.DBUFFER_ERROR;
-            }
-            file.getLock().writeLock().lock();
-            
-            List<Integer> blockIDs = getMappedBlockIDs(file);
-            int deltaBlocks = file.deltaBlocks(count);
-            
-            if (deltaBlocks < 0) {
-                // free blocks
-                deltaBlocks *= -1;
-                for (int i = blockIDs.size(); i > blockIDs.size() - deltaBlocks; i--) {
-                    _cache.newFreeBlock(blockIDs.get(i - 1));
-                }
-            }
-            else {
-                // Adding blocks
-                for (int i = blockIDs.size(); i < blockIDs.size() + deltaBlocks; i++) {
-                    if (_cache.numOfFreeBlocks() > 0) {
-                        int newBlock = _cache.getNextFreeBlock();
-                        _cache.newUsedBlock(newBlock);
-                        blockIDs.add(newBlock);
-                    }
-                }
-            }
+		DFile file = _fileMap.get(dFID.getDFileID());
+		if (file == null) {
+			System.out.println("Error: bad file request");
+			return Constants.DBUFFER_ERROR;
+		}
+		file.getLock().writeLock().lock();
 
-            file.setSize(count);
-            List<DBuffer> indirect = new ArrayList<>();
-            if (!file.isMapped()) {    
-                for (int i = 0; i < file.getNumIndirectBlocks(); i++) {
-                    int newBlock = _cache.getNextFreeBlock();
-                    DBuffer dbuffer = _cache.getBlock(newBlock);
-                    indirect.add(dbuffer);
-                    if (!dbuffer.checkValid()) {
-                            dbuffer.startFetch();
-                            dbuffer.waitValid();
-                    }
-                    
-                }
-            }
-            else {
-                for (Integer i : file.getIndirectBlocks()) {
-                    DBuffer dbuffer = _cache.getBlock(i);
-                    indirect.add(dbuffer);
-                    if (!dbuffer.checkValid()) {
-                            dbuffer.startFetch();
-                            dbuffer.waitValid();
-                    }    
-                }
-            }
-            file.mapFile(indirect, blockIDs);
-            
-            blockIDs = getMappedBlockIDs(file);
-            int start = startOffset;
-            int howMany = count;
+		List<Integer> blockIDs = getMappedBlockIDs(file);
+		int deltaBlocks = file.deltaBlocks(count);
 
-            //Actually write now
-            for (int i = 0; i < blockIDs.size(); i++) {
-                DBuffer d = _cache.getBlock(blockIDs.get(i));
-                if (!d.checkValid()) {
-                    d.startFetch();
-                    d.waitValid();
-                }
+		if (deltaBlocks < 0) {
+			// free blocks
+			deltaBlocks *= -1;
+			for (int i = blockIDs.size(); i > blockIDs.size() - deltaBlocks; i--) {
+				_cache.newFreeBlock(blockIDs.get(i - 1));
+			}
+		} else {
+			// Adding blocks
+			for (int i = blockIDs.size(); i < blockIDs.size() + deltaBlocks; i++) {
+				if (_cache.numOfFreeBlocks() > 0) {
+					int newBlock = _cache.getNextFreeBlock();
+					_cache.newUsedBlock(newBlock);
+					blockIDs.add(newBlock);
+				}
+			}
+		}
 
-                int written = d.write(buffer, start, howMany);
-                howMany -= written;
-                start += written;
-            }
+		file.setSize(count);
+		List<DBuffer> indirect = new ArrayList<>();
+		if (!file.isMapped()) {
+			for (int i = 0; i < file.getNumIndirectBlocks(); i++) {
+				int newBlock = _cache.getNextFreeBlock();
+				DBuffer dbuffer = _cache.getBlock(newBlock);
+				indirect.add(dbuffer);
+				if (!dbuffer.checkValid()) {
+					dbuffer.startFetch();
+					dbuffer.waitValid();
+				}
 
-            file.getLock().writeLock().unlock();
-            return count;
+			}
+		} else {
+			for (Integer i : file.getIndirectBlocks()) {
+				DBuffer dbuffer = _cache.getBlock(i);
+				indirect.add(dbuffer);
+				if (!dbuffer.checkValid()) {
+					dbuffer.startFetch();
+					dbuffer.waitValid();
+				}
+			}
+		}
+		file.mapFile(indirect, blockIDs);
+
+		blockIDs = getMappedBlockIDs(file);
+		int start = startOffset;
+		int howMany = count;
+
+		// Actually write now
+		for (int i = 0; i < blockIDs.size(); i++) {
+			DBuffer d = _cache.getBlock(blockIDs.get(i));
+			if (!d.checkValid()) {
+				d.startFetch();
+				d.waitValid();
+			}
+
+			int written = d.write(buffer, start, howMany);
+			howMany -= written;
+			start += written;
+		}
+
+		file.getLock().writeLock().unlock();
+		return count;
 	}
 
 	@Override
@@ -241,9 +243,9 @@ public class DFSImpl extends DFS {
 	 * @return list with indexes of blocks with data
 	 */
 	private List<Integer> getMappedBlockIDs(DFile file) {
-	    List<Integer> blockIDs = new ArrayList<>();
-	    if(!file.isMapped())
-	        return blockIDs;
+		List<Integer> blockIDs = new ArrayList<>();
+		if (!file.isMapped())
+			return blockIDs;
 		List<Integer> indirectBlocks = file.getIndirectBlocks();
 		for (int i : indirectBlocks) {
 			DBuffer dbuffer = _cache.getBlock(i);
