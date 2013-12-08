@@ -26,7 +26,7 @@ public class Inode {
     private int _fileSize;
     private byte[] _buffer;
     private boolean _isMapped;
-    private List<Integer> _blocksFromFile;
+    private List<Integer> _indirectBlocks;
     
     private int _numOfIndirectBlocks;
     
@@ -35,7 +35,7 @@ public class Inode {
         _FID = fileID;
         _fileSize = size;
         _buffer = new byte[Constants.INODE_SIZE];
-        _blocksFromFile = new ArrayList<>();
+        _indirectBlocks = new ArrayList<>();
 
         byte[] someMetadata = writeInts(_FID.getDFileID(), _fileSize);
         System.arraycopy(someMetadata.length, 0, _buffer, 0, someMetadata.length);
@@ -65,14 +65,11 @@ public class Inode {
             return false;
         }
         
-        _blocksFromFile = blocksInFile;
-        
-        List<Integer> indirectBlocksIDs = new ArrayList<>(); 
         int subListStart = 0;
         int listSize = blocksInFile.size();
         
         for (DBuffer buf : indirectBlocks) {      
-            indirectBlocksIDs.add(buf.getBlockID());
+            _indirectBlocks.add(buf.getBlockID());
             byte[] result = null;
             
             if (listSize - subListStart > Constants.INTS_IN_BLOCK){
@@ -86,7 +83,7 @@ public class Inode {
             subListStart += result.length;
         }
         
-        byte[] moreMetadata = writeInts(indirectBlocksIDs);
+        byte[] moreMetadata = writeInts(_indirectBlocks);
         System.arraycopy(moreMetadata, 0, _buffer, Constants.POSITION_INDIRECT_BLOCK_REGION, moreMetadata.length);
         
         _isMapped = true; 
@@ -175,7 +172,11 @@ public class Inode {
         }
     }
     
-    public List<Integer> getBlocksInFile() {
-        return _blocksFromFile;
+    /**
+     * 
+     * @return IDs of indirect blocks
+     */
+    public List<Integer> getIndirectBlocks() {
+        return _indirectBlocks;
     }
 }
