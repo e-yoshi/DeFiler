@@ -40,18 +40,16 @@ public class DFSImpl extends DFS {
 
 	@Override
 	public void init() {
-		synchronized (_cache) {
-			if (_cache == null) {
-				try {
-					_cache = new DBufferCache(Constants.NUM_OF_CACHE_BLOCKS, new VirtualDisk(super._volName,
-							super._format));
-				} catch (FileNotFoundException e) {
-					e.printStackTrace();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+		if (_cache == null) {
+			try {
+				_cache = new DBufferCache(Constants.NUM_OF_CACHE_BLOCKS, new VirtualDisk(super._volName, super._format));
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
 		}
+
 		// Scan Inode Region for files and check file consistency
 		for (int i = 1; i <= Constants.INODE_REGION_SIZE; i++) {
 			DBuffer block = _cache.getBlock(i);
@@ -69,6 +67,7 @@ public class DFSImpl extends DFS {
 				if (_fileMap.containsKey(i)) {
 					continue;
 				}
+				_fileMap.put(i, null);
 				return new DFileID(i);
 			}
 		}
@@ -79,7 +78,7 @@ public class DFSImpl extends DFS {
 	public void destroyDFile(DFileID dFID) {
 		synchronized (_fileMap) {
 			DFile file = _fileMap.get(dFID.getDFileID());
-			if(file==null) {
+			if (file == null) {
 				System.out.println("The Dfile was not found!");
 				return;
 			}
@@ -312,7 +311,7 @@ public class DFSImpl extends DFS {
 					if (_cache.containsUsedBlock(i)) {
 						throw new IllegalStateException("One block should only be mapped by one file.");
 					}
-					//read datablocks
+					// read datablocks
 					List<Integer> dataBlocks = new ArrayList<>();
 					for (int j = 0; j < Constants.INTS_IN_BLOCK; j++) {
 						integer = Arrays.copyOfRange(buffer, Constants.BYTES_PER_INT * j, Constants.BYTES_PER_INT
