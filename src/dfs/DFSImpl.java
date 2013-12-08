@@ -91,6 +91,10 @@ public class DFSImpl extends DFS {
 	public void destroyDFile(DFileID dFID) {
 		synchronized (_fileMap) {
 			DFile file = _fileMap.get(dFID.getDFileID());
+			if(file==null) {
+				System.out.println("The Dfile was not found!");
+				return;
+			}
 			// lock file writer, avoid readers from reading this file
 			file.getLock().writeLock().lock();
 			_lockedBlocks.add(file.getINodeBlock());
