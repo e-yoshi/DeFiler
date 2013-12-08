@@ -3,6 +3,8 @@ package common;
 import java.util.List;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import dblockcache.DBuffer;
+import dfs.Inode;
 
 public class DFile {
 	private ReadWriteLock _lock = new ReentrantReadWriteLock();
@@ -12,17 +14,23 @@ public class DFile {
 	private int _size = -1;
 	private int _iNodeBlock = -1;
 	private int _iNodePosition = -1;
+	private Inode _inode;
 
 	public DFile(int fileId) {
 		_file = fileId;
 	}
 
-	public DFile(int fileId, int size, List<Integer> indirectBlocks, int iNodeBlock, int iNodePosition) {
+	public DFile(int fileId, int size, int iNodeBlock, int iNodePosition) {
 		_file = fileId;
 		_size = size;
-		_indirectBlocks = indirectBlocks;
 		setINodeBlock(iNodeBlock);
 		setINodePosition(iNodePosition);
+		_inode = new Inode(fileId, size);
+	}
+	
+	public void mapFile(List<DBuffer> indirect, List<Integer> direct) {
+	    _inode.mapFile(indirect, direct);
+	    _indirectBlocks = _inode.getIndirectBlocks();
 	}
 
 	public ReadWriteLock getLock() {

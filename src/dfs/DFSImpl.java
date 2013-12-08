@@ -91,10 +91,10 @@ public class DFSImpl extends DFS {
 			dbuffer.write(buffer, position, position + Constants.INODE_SIZE);
 			dbuffer.startPush();
 			for (int indBlocks : file.getIndirectBlocks()) {
-			    _cache.newUsedBlock(indBlocks);
+			    _cache.newFreeBlock(indBlocks);
 			}
-			for (int dataBlocks : file.getDataBlocks()) {
-			    _cache.newUsedBlock(dataBlocks);
+			for (Integer dataBlocks : getMappedBlockIDs(file)) {
+			    _cache.newFreeBlock(dataBlocks);
 			}
 			_fileMap.remove(file.getFileId());
 		}

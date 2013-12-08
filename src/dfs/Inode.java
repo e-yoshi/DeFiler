@@ -22,7 +22,7 @@ import dblockcache.DBuffer;
  *
  */
 public class Inode {
-    private DFileID _FID;
+    private int _FID;
     private int _fileSize;
     private byte[] _buffer;
     private boolean _isMapped;
@@ -30,14 +30,14 @@ public class Inode {
     
     private int _numOfIndirectBlocks;
     
-    Inode(DFileID fileID, int size) {
+    public Inode(int fileID, int size) {
         _isMapped = false;
         _FID = fileID;
         _fileSize = size;
         _buffer = new byte[Constants.INODE_SIZE];
         _indirectBlocks = new ArrayList<>();
 
-        byte[] someMetadata = writeInts(_FID.getDFileID(), _fileSize);
+        byte[] someMetadata = writeInts(_FID, _fileSize);
         System.arraycopy(someMetadata.length, 0, _buffer, 0, someMetadata.length);
         
         //Assuming size is given in bytes instead of blocks
@@ -158,18 +158,7 @@ public class Inode {
     public int getFileID() {
         if (!_isMapped) return Constants.DBUFFER_ERROR;
         
-        try{
-            ByteArrayInputStream bos = new ByteArrayInputStream(_buffer);
-            DataInputStream dos = new DataInputStream(bos);
-            int id = dos.readInt();
-            dos.close();
-            // Create a new byte array of the correct size
-            return id;
-        } 
-        catch (IOException e) {
-            e.printStackTrace();
-            return Constants.DBUFFER_ERROR;
-        }
+        return _FID;
     }
     
     /**
