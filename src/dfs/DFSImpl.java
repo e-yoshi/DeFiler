@@ -60,7 +60,7 @@ public class DFSImpl extends DFS {
 	@Override
 	public DFileID createDFile() {
 		synchronized (_fileMap) {
-			for (int i = 0; i < Constants.MAX_DFILES; i++) {
+			for (int i = 1; i <= Constants.MAX_DFILES; i++) {
 				if (_fileMap.containsKey(i)) {
 					continue;
 				}

@@ -9,7 +9,6 @@ import dfs.Inode;
 public class DFile {
 	private ReadWriteLock _lock = new ReentrantReadWriteLock();
 	private int _file = -1;
-	private List<Integer> _indirectBlocks = null;
 	private List<Integer> _dataBlocks = null;
 	private int _size = -1;
 	private int _iNodeBlock = -1;
@@ -30,7 +29,6 @@ public class DFile {
 	
 	public void mapFile(List<DBuffer> indirect, List<Integer> direct) {
 	    _inode.mapFile(indirect, direct);
-	    _indirectBlocks = _inode.getIndirectBlocks();
 	}
 
 	public ReadWriteLock getLock() {
