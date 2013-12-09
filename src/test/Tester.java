@@ -14,11 +14,11 @@ public class Tester implements Runnable {
 	public static void main(String args[]) {
 		dfs.init();
 		// Testing Create DFile
-		testCreateDFile();
+		//testCreateDFile();
 		// TestDeleteFile
-		testDeleteDFiles();
+		//testDeleteDFiles();
 		// Testing max byte array
-		//testMaxByteArray();
+		testMaxByteArray();
 		// Testing Read and Write
 		testReadWriteText();
 

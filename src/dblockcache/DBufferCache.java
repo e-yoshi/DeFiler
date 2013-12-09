@@ -184,6 +184,8 @@ public class DBufferCache {
 	}
 	
 	public Integer getNextFreeBlock() {
-	    return _freeBlocksInDisk.first();
+	    int first =  _freeBlocksInDisk.first();
+	    _freeBlocksInDisk.remove(first);
+	    return first;
 	}
 }
