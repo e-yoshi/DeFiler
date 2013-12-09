@@ -11,9 +11,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader.Array;
-
-import sun.awt.SunHints.Value;
 import virtualdisk.VirtualDisk;
 import common.Constants;
 import common.DFile;
@@ -305,6 +302,7 @@ public class DFSImpl extends DFS {
 	@Override
 	public void sync() {
 		_cache.sync();
+		System.out.println("Sync completed");
 	}
 
 	/**

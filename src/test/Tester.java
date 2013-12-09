@@ -22,17 +22,28 @@ public class Tester implements Runnable {
 		// TestDeleteFile
 		// testDeleteDFiles();
 		// Testing max byte array
+		/*
 		int result = 0;
 		for (int i = 0; i < 100; i++) {
-			Random rand = new Random();
-			boolean success = testMaxByteArray(rand.nextInt(100) + 1000);
+			//Random rand = new Random();
+			boolean success = testMaxByteArray(1023);//(rand.nextInt(100) + 1000);
 			if(success)
 				result++;
 		}
 		System.out.println(result);
+		*/
+		
 		// Testing Read and Write
-		testReadWriteText();
+		//testReadWriteText();
+		//dfs.sync();
 		// Test concurrent read write.
+		
+		byte[] buffer = text.getBytes();
+		byte[] result = new byte[buffer.length];
+		dfs.read(new DFileID(1), result, 0, buffer.length);
+		String resultString = new String(result);
+		if (resultString.equals(text))
+			System.out.println(resultString);
 
 	}
 
