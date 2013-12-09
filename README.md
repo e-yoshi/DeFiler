@@ -59,11 +59,12 @@ is not reached and discarding the front of the queue if necessary
 ===========================================
 
 DFSImpl
+
 This class is the entry point of the program and the main component that manages the 
 files. It can be initiated with a format parameter that specifies if the disk should be 
 formatted or not. 
 If so, the disk attempts to zero the data from every block, if not, it will scan the 
-inode region and load the existent data
+inode region and load the existent data.
  
 The create file method simply creates a file and assings an id to it.
 Destroy file erases the data in the file blocks and in its inode. It overwrites
