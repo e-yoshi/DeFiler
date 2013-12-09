@@ -17,6 +17,18 @@ import common.Constants;
 import common.Constants.DiskOperationType;
 import dblockcache.DBuffer;
 
+/**
+ * This class represents the lowest level in the dfs hierarchy. it is accessed by
+ * the dbuffers to fetch or pull data from or to memory. Once a buffer starts a request
+ * to the disk, the disk places the buffer in a queue which is processed on another thread
+ * Once this thread has an empty queue, it will wait until a new dbuffer comes. Also, it contains
+ * a wrapper class called request, that contains the DBuffer and the operation type 
+ * required for processing. Once a DBuffer is popped out of the queue, it makes a read from 
+ * or write to a random access file depending on the operation type that should be done
+ * 
+ * @author elderyoshida
+ *
+ */
 public class VirtualDisk implements IVirtualDisk, Runnable {
 
 	private String _volName;
