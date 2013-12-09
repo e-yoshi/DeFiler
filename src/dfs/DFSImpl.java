@@ -462,6 +462,7 @@ public class DFSImpl extends DFS {
                             int position = j * Constants.INODE_SIZE;
                             integer = Arrays.copyOfRange(block, position, position + Constants.BYTES_PER_INT);
                             
+                            
                             int dfileId = ByteBuffer.wrap(integer).getInt();
                             //System.out.println("For position "+position+" extracted id "+dfileId);
                             if (dfileId == file.getFileId()) {
