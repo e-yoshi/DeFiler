@@ -447,7 +447,7 @@ public class DFSImpl extends DFS {
 	}
 
 	private DFile writeInode(DFile file) {
-	    if(_fileMap.containsKey(file))
+
 		for (int i = 1; i <= Constants.INODE_REGION_SIZE; i++) {
 			DBuffer dbuffer = _cache.getBlock(i);
 			if (!dbuffer.checkValid()) {
