@@ -167,6 +167,13 @@ public class DBuffer {
 	 * If count is greater than a block size, only BLOCK_SIZE bytes will be written 
 	 */
 	public synchronized int write(byte[] buffer, int startOffset, int count) {
+	    ByteBuffer bytes = ByteBuffer.wrap(buffer);
+            IntBuffer ints = bytes.asIntBuffer();
+            System.out.println("Receiving write in buffer, buffer is: ");
+            while(ints.hasRemaining()){
+                System.out.print(" "+ints.get());
+            }
+            System.out.println("");
 	    
 	    if(startOffset + count > buffer.length || startOffset < 0)
 	        return Constants.DBUFFER_ERROR;
@@ -182,8 +189,9 @@ public class DBuffer {
 	    // write into dBuff
 	    for (int i = 0; i < readBytes; i++) 
 	        _dBuffer[i] = buffer[i + startOffset];
-	    ByteBuffer bytes = ByteBuffer.wrap(_dBuffer);
-            IntBuffer ints = bytes.asIntBuffer();
+	    
+	    bytes = ByteBuffer.wrap(_dBuffer);
+            ints = bytes.asIntBuffer();
             System.out.println("Just wrote into buffer with id "+_blockID+":");
             while(ints.hasRemaining()){
                 System.out.print(" "+ints.get());

@@ -256,10 +256,8 @@ public class DFSImpl extends DFS {
 		blockIDs = getMappedBlockIDs(file);
 		System.out.println("New mapped block IDs has size "+blockIDs.size()+" and ids:\n"+blockIDs.toString());
 		int startBlock = (int) Math.floor((double) startOffset / (double) Constants.BLOCK_SIZE);
-		int startInStartBlock = startOffset % Constants.BLOCK_SIZE;
 		int start = startOffset;
 		int howMany = count;
-		System.out.println("How many is "+howMany);
 		int written = 0;
 		// Actually write now
 		for (int i = startBlock; i < blockIDs.size(); i++) {
@@ -457,9 +455,9 @@ public class DFSImpl extends DFS {
 				integer = Arrays.copyOfRange(block, position, position + Constants.BYTES_PER_INT);
 				
 				int dfileId = ByteBuffer.wrap(integer).getInt();
-				System.out.println("For position "+position+" extracted id "+dfileId);
+				//System.out.println("For position "+position+" extracted id "+dfileId);
 				if (dfileId == 0) {
-				    System.out.println("Found id 0, Creating file");
+				    //System.out.println("Found id 0, Creating file");
 				    byte[] size = ByteBuffer.allocate(4).putInt(file.getFileId()).array();
 				    for(int z=0; z<4; z++) {
 				        block[j * Constants.INODE_SIZE+z]=size[z];
