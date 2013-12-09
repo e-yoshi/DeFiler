@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -31,6 +32,7 @@ public class Inode {
 	private int _numOfIndirectBlocks;
 
 	public Inode(int fileID, int size) {
+	    System.out.println("Creating file with id "+fileID+" and size "+size);
 		_isMapped = false;
 		_FID = fileID;
 		setSize(size);
@@ -38,6 +40,8 @@ public class Inode {
 		_indirectBlocks = new ArrayList<>();
 
 		byte[] someMetadata = writeInts(_FID, _fileSize);
+		ByteBuffer wrapped = ByteBuffer.wrap(someMetadata); // big-endian by default
+		System.out.println("Metadata found id: "+wrapped.getInt()+" and size "+wrapped.getInt());
 		_buffer = Arrays.copyOfRange(someMetadata, 0, Constants.INODE_SIZE);
 	}
 
@@ -76,7 +80,8 @@ public class Inode {
 			} else {
 				result = writeInts(blocksInFile.subList(subListStart, listSize));
 			}
-
+			ByteBuffer bytes = ByteBuffer.wrap(result);
+			System.out.println("result has length "+result.length+" and numbers "+bytes.getInt()+" "+bytes.getInt());
 			buf.write(result, 0, result.length);
 			subListStart += Constants.INTS_IN_BLOCK;
 		}
@@ -90,6 +95,13 @@ public class Inode {
 		for(int i=0; i<(Constants.INODE_SIZE-Constants.BYTES_PER_INT*Constants.INODE_DATA_INDEX); i++) {
 			_buffer[i+Constants.BYTES_PER_INT*Constants.INODE_DATA_INDEX]=moreMetadata[i];
 		}
+		ByteBuffer bytes = ByteBuffer.wrap(_buffer);
+		IntBuffer ints = bytes.asIntBuffer();
+		System.out.println("elements mapped directly to buffer: ");
+		while(ints.hasRemaining()){
+		    System.out.print(" "+ints.get());
+		}
+		System.out.println("");
 		_isMapped = true;
 		return true;
 	}

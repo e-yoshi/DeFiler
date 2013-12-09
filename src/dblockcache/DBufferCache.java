@@ -89,12 +89,12 @@ public class DBufferCache {
 		DBuffer buffer = null;
 		buffer = new DBuffer(_disk, blockID);
 
-		if (!_freeBlocksInDisk.contains(blockID))
-			buffer.startFetch();
-		else {
-			synchronized (_freeBlocksInDisk) {
-				_freeBlocksInDisk.remove(blockID);
-			}
+		synchronized (_freeBlocksInDisk) {
+		    if (!_freeBlocksInDisk.contains(blockID))
+		        buffer.startFetch();
+		    else {			
+		        _freeBlocksInDisk.remove(blockID);	
+		    }
 		}
 
 		_blocksInCache.put(blockID, buffer);

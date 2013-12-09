@@ -23,8 +23,9 @@ public class Tester implements Runnable {
 		// testDeleteDFiles();
 		// Testing max byte array
 		int result = 0;
-		for (int i = 0; i < 100; i++) {
+		for (int i = 0; i < 10; i++) {
 			Random rand = new Random();
+			System.out.println("Test #"+i);
 			boolean success = testMaxByteArray(rand.nextInt(100) + 1000);
 			if(success)
 				result++;
@@ -37,6 +38,7 @@ public class Tester implements Runnable {
 	}
 
 	private static boolean testMaxByteArray(int i) {
+	    System.out.println("test for length "+i);
 		byte[] max = new byte[i];
 		Random rand = new Random();
 		rand.nextBytes(max);

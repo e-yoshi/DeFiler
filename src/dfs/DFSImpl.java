@@ -5,6 +5,7 @@ import java.io.DataInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -151,6 +152,7 @@ public class DFSImpl extends DFS {
 
 	@Override
 	public int read(DFileID dFID, byte[] buffer, int startOffset, int count) {
+	    System.out.println("Reading...");
 		DFile file = _fileMap.get(dFID.getDFileID());
 		if (file == null) {
 			System.out.println("Error: bad file request");
@@ -158,6 +160,7 @@ public class DFSImpl extends DFS {
 		}
 		file.getLock().readLock().lock();
 		List<Integer> blockIDs = getMappedBlockIDs(file);
+		System.out.println("Size of block ids is "+blockIDs.size()+"with numbers\n"+blockIDs.toString());
 		int size = blockIDs.size();
 		int start = startOffset;
 		int howMany = count;
@@ -171,7 +174,14 @@ public class DFSImpl extends DFS {
 				dbuffer.startFetch();
 				dbuffer.waitValid();
 			}
-
+			ByteBuffer bytes = ByteBuffer.wrap(dbuffer.getBuffer());
+                      IntBuffer ints = bytes.asIntBuffer();
+                      System.out.println("elements in dbuffer: ");
+                      while(ints.hasRemaining()){
+                          System.out.print(" "+ints.get());
+                      }
+                      System.out.println("");
+	
 			int read = dbuffer.read(buffer, start, howMany);
 			howMany -= read;
 			start += read;
@@ -191,7 +201,7 @@ public class DFSImpl extends DFS {
 
 		List<Integer> blockIDs = getMappedBlockIDs(file);
 		int deltaBlocks = file.deltaBlocks(count + startOffset);
-
+		System.out.println("Delta blocks is "+deltaBlocks);
 		if (deltaBlocks < 0) {
 			deltaBlocks *= -1;
 			for (int i = blockIDs.size(); i > blockIDs.size() - deltaBlocks; i--) {
@@ -208,19 +218,22 @@ public class DFSImpl extends DFS {
 				}
 			}
 		}
+		System.out.println("Size of block ids is "+blockIDs.size()+"with numbers\n"+blockIDs.toString());
 
 		file.setSize(count);
 		List<DBuffer> indirect = new ArrayList<>();
 		if (!file.isMapped()) {
 			for (int i = 0; i < file.getNumIndirectBlocks(); i++) {
+			    
 				int newBlock = _cache.getNextFreeBlock();
+				_cache.newUsedBlock(newBlock);
 				DBuffer dbuffer = _cache.getBlock(newBlock);
+				System.out.println("Got indirect id "+newBlock);
 				indirect.add(dbuffer);
 				if (!dbuffer.checkValid()) {
 					dbuffer.startFetch();
 					dbuffer.waitValid();
 				}
-
 			}
 		} else {
 			while (file.getIndirectBlocks().size() < file.getNumIndirectBlocks()) {
@@ -244,39 +257,27 @@ public class DFSImpl extends DFS {
 		file.mapFile(indirect, blockIDs);
 
 		blockIDs = getMappedBlockIDs(file);
-		int startBlock = (int) Math.floor(startOffset / Constants.BLOCK_SIZE);
+		System.out.println("New mapped block IDs has size "+blockIDs.size()+" and ids:\n"+blockIDs.toString());
+		int startBlock = (int) Math.floor((double) startOffset / (double) Constants.BLOCK_SIZE);
 		int startInStartBlock = startOffset % Constants.BLOCK_SIZE;
-		int start = 0;
+		int start = startOffset;
 		int howMany = count;
+		System.out.println("How many is "+howMany);
 		int written = 0;
 		// Actually write now
 		for (int i = startBlock; i < blockIDs.size(); i++) {
-			written = 0;
+			System.out.println("Requesting direct block "+blockIDs.get(i));
 			DBuffer d = _cache.getBlock(blockIDs.get(i));
 			if (!d.checkValid()) {
 				d.startFetch();
 				d.waitValid();
 			}
 
-			if (i == startBlock) {
-				byte[] merge = new byte[Constants.BLOCK_SIZE];
-				merge = d.getBuffer();
-				int end = Constants.BLOCK_SIZE - startInStartBlock;
-				if (end > count)
-					end = count;
-				for (int j = 0; j < end; j++) {
-					merge[j + startInStartBlock] = buffer[j];
-				}
-				d.write(merge, 0, Constants.BLOCK_SIZE);
-				written = end;
-				start = startInStartBlock;
-			} else {
-				written = d.write(buffer, start, howMany);
-			}
+			written = d.write(buffer, start, howMany);
 			howMany -= written;
 			start += written;
 		}
-
+		System.out.println("Written bytes "+(start-startOffset));
 		file.getLock().writeLock().unlock();
 		return count;
 	}
@@ -456,8 +457,11 @@ public class DFSImpl extends DFS {
 			for (int j = 0; j < Constants.INODES_IN_BLOCK; j++) {
 				int position = j * Constants.INODE_SIZE;
 				integer = Arrays.copyOfRange(block, position, position + Constants.BYTES_PER_INT);
+				
 				int dfileId = ByteBuffer.wrap(integer).getInt();
+				System.out.println("For position "+position+" extracted id "+dfileId);
 				if (dfileId == 0) {
+				    System.out.println("Found id 0, Creating file");
 					dbuffer.write(file.getINodeMetadata(), position, Constants.INODE_SIZE);
 					file.setINodeBlock(i);
 					file.setINodePosition(j);

@@ -1,6 +1,8 @@
 package dblockcache;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 import common.Constants;
 import common.Constants.DiskOperationType;
 import virtualdisk.IVirtualDisk;
@@ -176,9 +178,17 @@ public class DBuffer {
 	        readBytes = _dBuffer.length;
 	        System.out.println("Warning! Count > dbuff size!");
 	    }
+	    System.out.println("Writing in dbuff. Start is "+startOffset+" count is "+count);
 	    // write into dBuff
 	    for (int i = 0; i < readBytes; i++) 
 	        _dBuffer[i] = buffer[i + startOffset];
+	    ByteBuffer bytes = ByteBuffer.wrap(_dBuffer);
+            IntBuffer ints = bytes.asIntBuffer();
+            System.out.println("Just wrote into buffer with id "+_blockID+":");
+            while(ints.hasRemaining()){
+                System.out.print(" "+ints.get());
+            }
+            System.out.println("");
 	    
 	    // To prevent wrong readings, add EOF
 	   // if (readBytes < _dBuffer.length)
@@ -190,7 +200,7 @@ public class DBuffer {
                 _isClean = false;
                 _isValid = true;
             }
-	    return count;
+	    return readBytes;
 	}
 	
 	/**
