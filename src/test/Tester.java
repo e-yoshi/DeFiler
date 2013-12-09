@@ -1,6 +1,11 @@
 package test;
 
+import java.awt.print.Printable;
+import java.util.Arrays;
 import java.util.Random;
+
+import com.sun.xml.internal.ws.addressing.ProblemAction;
+
 import common.Constants;
 import common.DFileID;
 import dfs.DFS;
@@ -14,11 +19,11 @@ public class Tester implements Runnable {
 	public static void main(String args[]) {
 		dfs.init();
 		// Testing Create DFile
-		//testCreateDFile();
+		// testCreateDFile();
 		// TestDeleteFile
-		//testDeleteDFiles();
+		// testDeleteDFiles();
 		// Testing max byte array
-		testMaxByteArray();
+		//testMaxByteArray();
 		// Testing Read and Write
 		testReadWriteText();
 
@@ -34,8 +39,17 @@ public class Tester implements Runnable {
 		dfs.write(fileID, max, 0, max.length);
 		byte[] result = new byte[max.length];
 		dfs.read(fileID, result, 0, max.length);
-		if (max == result) {
+		if (Arrays.equals(max, result)) {
+			
 			System.out.println("Test case passed!");
+		} else {
+			for(int i=0; i<max.length; i++) {
+				if(max[i]!=result[i]) {
+					System.out.println("Problem at index "+ i + max[i] + "   "+ result[i]);
+				}
+			}
+			System.out.println("Test case failed!");
+
 		}
 	}
 
@@ -46,7 +60,8 @@ public class Tester implements Runnable {
 		byte[] result = new byte[buffer.length];
 		dfs.read(fileID, result, 0, buffer.length);
 		String resultString = new String(result);
-		System.out.println(resultString);
+		if (resultString.equals(text))
+			System.out.println(resultString);
 	}
 
 	private static void testDeleteDFiles() {

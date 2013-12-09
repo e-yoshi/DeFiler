@@ -74,11 +74,11 @@ public class Inode {
 			if (listSize - subListStart > Constants.INTS_IN_BLOCK) {
 				result = writeInts(blocksInFile.subList(subListStart, subListStart + Constants.INTS_IN_BLOCK));
 			} else {
-				result = writeInts(blocksInFile.subList(subListStart, listSize - subListStart));
+				result = writeInts(blocksInFile.subList(subListStart, listSize));
 			}
 
 			buf.write(result, 0, result.length);
-			subListStart += result.length;
+			subListStart += Constants.INTS_IN_BLOCK;
 		}
 
 		byte[] moreMetadata = writeInts(_indirectBlocks);
@@ -108,7 +108,7 @@ public class Inode {
 	 * @return
 	 */
 	private byte[] writeInts(List<Integer> ints) {
-		byte[] result = new byte[Constants.INODE_SIZE];
+		byte[] result = new byte[Constants.BLOCK_SIZE];
 		try {
 			ByteArrayOutputStream bos = new ByteArrayOutputStream();
 			DataOutputStream dos = new DataOutputStream(bos);
