@@ -91,8 +91,12 @@ public class DFSImpl extends DFS {
 
 		// Scan Inode Region for files and check file consistency
 		for (int i = 1; i <= Constants.INODE_REGION_SIZE; i++) {
-			DBuffer block = _cache.getBlock(i);
-			readInodes(block);
+			DBuffer dbuffer = _cache.getBlock(i);
+			if (!dbuffer.checkValid()) {
+				dbuffer.startFetch();
+				dbuffer.waitValid();
+			}
+			readInodes(dbuffer);
 		}
 
 		checkFileConsistency();
@@ -273,6 +277,8 @@ public class DFSImpl extends DFS {
 			start += written;
 		}
 		System.out.println("Written bytes "+(start-startOffset));
+		file = writeInode(file);
+		_fileMap.put(file.getFileId(), file);
 		file.getLock().writeLock().unlock();
 		return count;
 	}
@@ -351,7 +357,7 @@ public class DFSImpl extends DFS {
 		for (int i = 0; i < Constants.INODES_IN_BLOCK; i++) {
 			byte[] buffer = new byte[Constants.INODE_SIZE];
 			byte[] integer = new byte[4];
-			if (buf.read(buffer, i * Constants.INODE_SIZE, Constants.INODE_SIZE) == -1)
+			if (buf.read(buffer, i * Constants.INODE_SIZE, (i+1)*Constants.INODE_SIZE) == -1)
 				continue;
 			else {
 				integer = Arrays.copyOfRange(buffer, Constants.BYTES_PER_INT * Constants.INODE_FID,

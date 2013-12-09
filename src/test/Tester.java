@@ -3,7 +3,6 @@ package test;
 import java.util.Arrays;
 import java.util.Random;
 
-import com.sun.corba.se.spi.orbutil.fsm.Guard.Result;
 
 import common.Constants;
 import common.DFileID;
@@ -23,6 +22,7 @@ public class Tester implements Runnable {
 		// testDeleteDFiles();
 		// Testing max byte array
 		//
+		/*
 		int result = 0;
 		for (int i = 0; i < 100; i++) {
 			Random rand = new Random();
@@ -32,7 +32,8 @@ public class Tester implements Runnable {
 				result++;
 		}
 		System.out.println(result);
-		//
+		
+		*/
 		
 		// Testing Read and Write
 		//testReadWriteText();
