@@ -145,9 +145,9 @@ public class DBuffer {
             for (int i = 0; i < count; i++) {
                 
                 buffer[i + startOffset] = _dBuffer[i];
-                
+                /*
                 if(_dBuffer[i] == Constants.EOF) 
-                    return i;
+                    return i;*/
             }
             
             synchronized(this){
@@ -172,16 +172,17 @@ public class DBuffer {
 	    int readBytes = count;
 	    
 	    // Write on the whole dBuffer
-	    if(count > _dBuffer.length)
+	    if(count > _dBuffer.length) {
 	        readBytes = _dBuffer.length;
-	    
+	        System.out.println("Warning! Count > dbuff size!");
+	    }
 	    // write into dBuff
 	    for (int i = 0; i < readBytes; i++) 
 	        _dBuffer[i] = buffer[i + startOffset];
 	    
 	    // To prevent wrong readings, add EOF
-	    if (readBytes < _dBuffer.length)
-	        _dBuffer[count] = Constants.EOF;
+	   // if (readBytes < _dBuffer.length)
+	     //   _dBuffer[count] = Constants.EOF;
 	   
 	    synchronized(this){
                 notifyAll();

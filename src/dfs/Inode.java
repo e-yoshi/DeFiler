@@ -82,7 +82,14 @@ public class Inode {
 		}
 
 		byte[] moreMetadata = writeInts(_indirectBlocks);
-		_buffer = Arrays.copyOfRange(moreMetadata, Constants.INODE_DATA_INDEX, Constants.INODE_SIZE);
+		byte[] size = ByteBuffer.allocate(4).putInt(_fileSize).array();
+		for(int i=4; i<8; i++) {
+			_buffer[i]=size[i-4];
+		}
+		//_buffer = Arrays.copyOfRange(moreMetadata, Constants.INODE_DATA_INDEX, Constants.INODE_SIZE);
+		for(int i=0; i<(Constants.INODE_SIZE-Constants.BYTES_PER_INT*Constants.INODE_DATA_INDEX); i++) {
+			_buffer[i+Constants.BYTES_PER_INT*Constants.INODE_DATA_INDEX]=moreMetadata[i];
+		}
 		_isMapped = true;
 		return true;
 	}

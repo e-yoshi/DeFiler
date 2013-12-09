@@ -11,6 +11,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader.Array;
+
+import sun.awt.SunHints.Value;
 import virtualdisk.VirtualDisk;
 import common.Constants;
 import common.DFile;
@@ -158,6 +161,8 @@ public class DFSImpl extends DFS {
 		int size = blockIDs.size();
 		int start = startOffset;
 		int howMany = count;
+		if (file.getSize() < count)
+			howMany = file.getSize();
 
 		for (int i = 0; i < size; i++) {
 			DBuffer dbuffer = _cache.getBlock(blockIDs.get(i));
@@ -185,7 +190,7 @@ public class DFSImpl extends DFS {
 		file.getLock().writeLock().lock();
 
 		List<Integer> blockIDs = getMappedBlockIDs(file);
-		int deltaBlocks = file.deltaBlocks(count);
+		int deltaBlocks = file.deltaBlocks(count + startOffset);
 
 		if (deltaBlocks < 0) {
 			deltaBlocks *= -1;
@@ -239,18 +244,35 @@ public class DFSImpl extends DFS {
 		file.mapFile(indirect, blockIDs);
 
 		blockIDs = getMappedBlockIDs(file);
-		int start = startOffset;
+		int startBlock = (int) Math.floor(startOffset / Constants.BLOCK_SIZE);
+		int startInStartBlock = startOffset % Constants.BLOCK_SIZE;
+		int start = 0;
 		int howMany = count;
-
+		int written = 0;
 		// Actually write now
-		for (int i = 0; i < blockIDs.size(); i++) {
+		for (int i = startBlock; i < blockIDs.size(); i++) {
+			written = 0;
 			DBuffer d = _cache.getBlock(blockIDs.get(i));
 			if (!d.checkValid()) {
 				d.startFetch();
 				d.waitValid();
 			}
 
-			int written = d.write(buffer, start, howMany);
+			if (i == startBlock) {
+				byte[] merge = new byte[Constants.BLOCK_SIZE];
+				merge = d.getBuffer();
+				int end = Constants.BLOCK_SIZE - startInStartBlock;
+				if (end > count)
+					end = count;
+				for (int j = 0; j < end; j++) {
+					merge[j + startInStartBlock] = buffer[j];
+				}
+				d.write(merge, 0, Constants.BLOCK_SIZE);
+				written = end;
+				start = startInStartBlock;
+			} else {
+				written = d.write(buffer, start, howMany);
+			}
 			howMany -= written;
 			start += written;
 		}
@@ -308,7 +330,10 @@ public class DFSImpl extends DFS {
 				ByteArrayInputStream bos = new ByteArrayInputStream(bytes);
 				DataInputStream dos = new DataInputStream(bos);
 				while (dos.available() >= Constants.BYTES_PER_INT) {
-					blockIDs.add(dos.readInt());
+					int j = 0;
+					if ((j = dos.readInt()) != 0) {
+						blockIDs.add(j);
+					}
 				}
 				dos.close();
 				// Create a new byte array of the correct size

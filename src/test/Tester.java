@@ -3,6 +3,8 @@ package test;
 import java.util.Arrays;
 import java.util.Random;
 
+import com.sun.corba.se.spi.orbutil.fsm.Guard.Result;
+
 import common.Constants;
 import common.DFileID;
 import dfs.DFS;
@@ -20,16 +22,22 @@ public class Tester implements Runnable {
 		// TestDeleteFile
 		// testDeleteDFiles();
 		// Testing max byte array
-		testMaxByteArray();
+		int result = 0;
+		for (int i = 0; i < 100; i++) {
+			Random rand = new Random();
+			boolean success = testMaxByteArray(rand.nextInt(100) + 1000);
+			if(success)
+				result++;
+		}
+		System.out.println(result);
 		// Testing Read and Write
-		//testReadWriteText();
-
+		testReadWriteText();
 		// Test concurrent read write.
 
 	}
 
-	private static void testMaxByteArray() {
-		byte[] max = new byte[166];
+	private static boolean testMaxByteArray(int i) {
+		byte[] max = new byte[i];
 		Random rand = new Random();
 		rand.nextBytes(max);
 		DFileID fileID = dfs.createDFile();
@@ -37,17 +45,16 @@ public class Tester implements Runnable {
 		byte[] result = new byte[max.length];
 		dfs.read(fileID, result, 0, max.length);
 		if (Arrays.equals(max, result)) {
-			
 			System.out.println("Test case passed!");
+			return true;
 		} else {
 			/*
-			for(int i=0; i<max.length; i++) {
-				if(max[i]!=result[i]) {
-					System.out.println("Problem at index "+ i +"   "+ max[i] + "   "+ result[i]);
-				}
-			}
-			*/
+			 * for(int i=0; i<max.length; i++) { if(max[i]!=result[i]) {
+			 * System.out.println("Problem at index "+ i +"   "+ max[i] + "   "+
+			 * result[i]); } }
+			 */
 			System.out.println("Test case failed!");
+			return false;
 
 		}
 	}
