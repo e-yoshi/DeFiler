@@ -1,10 +1,7 @@
 package test;
 
-import java.awt.print.Printable;
 import java.util.Arrays;
 import java.util.Random;
-
-import com.sun.xml.internal.ws.addressing.ProblemAction;
 
 import common.Constants;
 import common.DFileID;
@@ -23,16 +20,16 @@ public class Tester implements Runnable {
 		// TestDeleteFile
 		// testDeleteDFiles();
 		// Testing max byte array
-		//testMaxByteArray();
+		testMaxByteArray();
 		// Testing Read and Write
-		testReadWriteText();
+		//testReadWriteText();
 
 		// Test concurrent read write.
 
 	}
 
 	private static void testMaxByteArray() {
-		byte[] max = new byte[Constants.MAX_FILE_SIZE];
+		byte[] max = new byte[166];
 		Random rand = new Random();
 		rand.nextBytes(max);
 		DFileID fileID = dfs.createDFile();
@@ -43,11 +40,13 @@ public class Tester implements Runnable {
 			
 			System.out.println("Test case passed!");
 		} else {
+			/*
 			for(int i=0; i<max.length; i++) {
 				if(max[i]!=result[i]) {
-					System.out.println("Problem at index "+ i + max[i] + "   "+ result[i]);
+					System.out.println("Problem at index "+ i +"   "+ max[i] + "   "+ result[i]);
 				}
 			}
+			*/
 			System.out.println("Test case failed!");
 
 		}
