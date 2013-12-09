@@ -204,4 +204,9 @@ public class Inode {
 	public void setMapped() {
 		_isMapped = true;
 	}
+	
+	public void setMetadata(byte[] metadata) {
+	    _buffer = metadata;
+	    
+	}
 }

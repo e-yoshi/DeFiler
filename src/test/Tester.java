@@ -36,8 +36,8 @@ public class Tester implements Runnable {
 		*/
 		
 		// Testing Read and Write
-		//testReadWriteText();
-		//dfs.sync();
+		testReadWriteText();
+		dfs.sync();
 		// Test concurrent read write.
 		
 		byte[] buffer = text.getBytes();

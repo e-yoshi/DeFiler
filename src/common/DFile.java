@@ -73,6 +73,10 @@ public class DFile {
 		return _inode.getMetadata();
 	}
 	
+	public void setMetadata(byte[] metadata) {
+	    _inode.setMetadata(metadata);
+	}
+	
 	public int deltaBlocks(int newSize) {
 	    return (int) (Math.ceil((double) newSize/(double) Constants.BLOCK_SIZE)
 	            - Math.ceil((double) _inode.getSize()/(double) Constants.BLOCK_SIZE));

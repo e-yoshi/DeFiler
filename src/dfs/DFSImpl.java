@@ -447,6 +447,7 @@ public class DFSImpl extends DFS {
 	}
 
 	private DFile writeInode(DFile file) {
+	    if(_fileMap.containsKey(file))
 		for (int i = 1; i <= Constants.INODE_REGION_SIZE; i++) {
 			DBuffer dbuffer = _cache.getBlock(i);
 			if (!dbuffer.checkValid()) {
@@ -456,6 +457,23 @@ public class DFSImpl extends DFS {
 			byte[] block = new byte[Constants.BLOCK_SIZE];
 			dbuffer.read(block, 0, Constants.BLOCK_SIZE);
 			byte[] integer = new byte[Constants.BYTES_PER_INT];
+			
+			for (int j = 0; j < Constants.INODES_IN_BLOCK; j++) {
+                            int position = j * Constants.INODE_SIZE;
+                            integer = Arrays.copyOfRange(block, position, position + Constants.BYTES_PER_INT);
+                            
+                            int dfileId = ByteBuffer.wrap(integer).getInt();
+                            //System.out.println("For position "+position+" extracted id "+dfileId);
+                            if (dfileId == file.getFileId()) {
+                                byte[] metadata = Arrays.copyOfRange(block, j * Constants.INODE_SIZE, Constants.INODE_SIZE);
+                                //System.out.println("Found id 0, Creating file");
+                                file.setMetadata(metadata);
+                                    file.setINodeBlock(i);
+                                    file.setINodePosition(j);
+                                    return file;
+                            }
+                    }
+			
 			for (int j = 0; j < Constants.INODES_IN_BLOCK; j++) {
 				int position = j * Constants.INODE_SIZE;
 				integer = Arrays.copyOfRange(block, position, position + Constants.BYTES_PER_INT);
