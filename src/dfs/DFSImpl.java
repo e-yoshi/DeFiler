@@ -22,7 +22,35 @@ import dblockcache.DBufferCache;
  * 
  * This class is the entry point of the program and the main component that manages the 
  * files. It can be initiated with a format parameter that specifies if the disk should be 
- * formatted or not.
+ * formatted or not. 
+ * If so, the disk attempts to zero the data from every block, if not, it will scan the 
+ * inode region and load the existent data
+ * 
+ * The create file method simply creates a file and assings an id to it.
+ * Destroy file erases the data in the file blocks and in its inode. It overwrites
+ * the metadata and frees the indirect and direct blocks of the file.
+ * 
+ * readFile retrieves the file with the correct id and locks it for reading,
+ * gets the mapped block ids from the file, and then loops for the appropriate amount
+ * of iterations to read from the debuff requested to the cache. Finally, it releases the lock
+ * 
+ * write file gets the file and the lock, and first calculates the discrepancy between write size and
+ * file size. It allocates or deallocates the required number of blocks, and initializes and maps 
+ * the metadata in case it is the first write to the file. Finally, it feteches the appropriate blocks 
+ * from the cache and overwrite them as necessary
+ * 
+ * getMappedBlockIDs is an interesting method to retrieve the ids of the data blocks in the file. 
+ * Interestingly, we could have used a list contained in the object file to return the ids of the data
+ * If it was implemented this way, we would be able to quickly access our data with a minimum number of 
+ * lines of code. 
+ * But we chose to access the data in the indirect blocks mapped by the inode, to scan
+ * each of them, to painfully devise an algorithm to extract bytes and convert them to ints, and to 
+ * retrieve the list of mapped block ids. Now, several lines of code are iterated multiple times hindering
+ * the performance that could let the file manager using our code to have a good night of sleep.
+ * But we chose it this way to not defy the purposes of the assignment
+ * 
+ * 
+ * 
  * 
  * @author henriquemoraes, elderyoshida
  *

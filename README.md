@@ -17,6 +17,7 @@ Inode
 This class is used to hold metadata of a file. The metadata constitues the file id, file size
 and ids of indirect blocks it maps. It represents the top level of 
 indirection as it points to indirect blocks that will contain the id of blocks to a file
+
 The amount of space required is calculated dynamically, so if the basic size parameters
 are altered, inode will still be able to map a file properly
 The inode has a method that maps its buffer and the indirect blocks it points to. 
@@ -42,6 +43,7 @@ This class represents the cache of the defiler. It keeps track of the free and u
 in disk with the aid of a sorted set to always select the first block available. 
 It uses a map to easily find the debuffers in the cache and a queue to determine the LRU
 policy.
+
 It also contains methods of manipulation of the free blocks that are generally used by the DFS
 Every time the DFS requests a block to the cache, the cache first checks if it has it. It updates
 the position of the block in the LRU queue and returns it. If the block is not in the cache 
