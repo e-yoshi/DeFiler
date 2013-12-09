@@ -460,7 +460,11 @@ public class DFSImpl extends DFS {
 				System.out.println("For position "+position+" extracted id "+dfileId);
 				if (dfileId == 0) {
 				    System.out.println("Found id 0, Creating file");
-					dbuffer.write(file.getINodeMetadata(), position, Constants.INODE_SIZE);
+				    byte[] size = ByteBuffer.allocate(4).putInt(file.getFileId()).array();
+				    for(int z=0; z<4; z++) {
+				        block[j * Constants.INODE_SIZE+z]=size[z];
+				    }
+					dbuffer.write(block, 0, Constants.BLOCK_SIZE);
 					file.setINodeBlock(i);
 					file.setINodePosition(j);
 					return file;
