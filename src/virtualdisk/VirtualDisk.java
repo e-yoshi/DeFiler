@@ -149,7 +149,6 @@ public class VirtualDisk implements IVirtualDisk, Runnable {
 					return;
 				try {
 					if (request.getOperation() == DiskOperationType.READ) {
-
 						readBlock(request.getDBuffer());
 
 					} else {

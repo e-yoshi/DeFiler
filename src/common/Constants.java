@@ -23,6 +23,7 @@ public class Constants {
 	
 	public static final int INODE_FID = 0;
 	public static final int INODE_FILE_SIZE = 1;
+	public static final int INODE_DATA_INDEX = 2;
 	public static final int INODES_IN_BLOCK = BLOCK_SIZE/INODE_SIZE;
 	public static final int INODE_REGION_SIZE = (int) Math.ceil((double) MAX_DFILES/
 	                                                     ((double) BLOCK_SIZE/(double)INODE_SIZE));

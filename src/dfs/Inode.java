@@ -85,8 +85,7 @@ public class Inode {
 		}
 
 		byte[] moreMetadata = writeInts(_indirectBlocks);
-		System.arraycopy(moreMetadata, 0, _buffer, Constants.POSITION_INDIRECT_BLOCK_REGION, moreMetadata.length);
-
+		_buffer = Arrays.copyOfRange(moreMetadata, Constants.INODE_DATA_INDEX, Constants.INODE_SIZE);
 		_isMapped = true;
 		return true;
 	}

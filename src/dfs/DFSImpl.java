@@ -184,14 +184,15 @@ public class DFSImpl extends DFS {
 		int deltaBlocks = file.deltaBlocks(count);
 
 		if (deltaBlocks < 0) {
-			// free blocks
-			deltaBlocks *= -1;
+			// free blocks??????
+			deltaBlocks -= 1;
 			for (int i = blockIDs.size(); i > blockIDs.size() - deltaBlocks; i--) {
 				_cache.newFreeBlock(blockIDs.get(i - 1));
 			}
 		} else {
 			// Adding blocks
-			for (int i = blockIDs.size(); i < blockIDs.size() + deltaBlocks; i++) {
+			int intialSize = blockIDs.size();
+			for (int i = intialSize; i < intialSize + deltaBlocks; i++) {
 				if (_cache.numOfFreeBlocks() > 0) {
 					int newBlock = _cache.getNextFreeBlock();
 					_cache.newUsedBlock(newBlock);
