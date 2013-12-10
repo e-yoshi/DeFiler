@@ -153,7 +153,7 @@ public class DFSImpl extends DFS {
 
 	@Override
 	public int read(DFileID dFID, byte[] buffer, int startOffset, int count) {
-	    System.out.println("Reading...");
+		System.out.println("Reading...");
 		DFile file = _fileMap.get(dFID.getDFileID());
 		if (file == null) {
 			System.out.println("Error: bad file request");
@@ -161,7 +161,7 @@ public class DFSImpl extends DFS {
 		}
 		file.getLock().readLock().lock();
 		List<Integer> blockIDs = getMappedBlockIDs(file);
-		System.out.println("Size of block ids is "+blockIDs.size()+"with numbers\n"+blockIDs.toString());
+		System.out.println("Size of block ids is " + blockIDs.size() + "with numbers\n" + blockIDs.toString());
 		int size = blockIDs.size();
 		int start = startOffset;
 		int howMany = count;
@@ -176,13 +176,13 @@ public class DFSImpl extends DFS {
 				dbuffer.waitValid();
 			}
 			ByteBuffer bytes = ByteBuffer.wrap(dbuffer.getBuffer());
-                      IntBuffer ints = bytes.asIntBuffer();
-                      System.out.println("elements in dbuffer: ");
-                      while(ints.hasRemaining()){
-                          System.out.print(" "+ints.get());
-                      }
-                      System.out.println("");
-	
+			IntBuffer ints = bytes.asIntBuffer();
+			System.out.println("elements in dbuffer: ");
+			while (ints.hasRemaining()) {
+				System.out.print(" " + ints.get());
+			}
+			System.out.println("");
+
 			int read = dbuffer.read(buffer, start, howMany);
 			howMany -= read;
 			start += read;
@@ -202,7 +202,7 @@ public class DFSImpl extends DFS {
 
 		List<Integer> blockIDs = getMappedBlockIDs(file);
 		int deltaBlocks = file.deltaBlocks(count + startOffset);
-		System.out.println("Delta blocks is "+deltaBlocks);
+		System.out.println("Delta blocks is " + deltaBlocks);
 		if (deltaBlocks < 0) {
 			deltaBlocks *= -1;
 			for (int i = blockIDs.size(); i > blockIDs.size() - deltaBlocks; i--) {
@@ -219,7 +219,7 @@ public class DFSImpl extends DFS {
 				}
 			}
 		}
-		System.out.println("Size of block ids is "+blockIDs.size()+"with numbers\n"+blockIDs.toString());
+		System.out.println("Size of block ids is " + blockIDs.size() + "with numbers\n" + blockIDs.toString());
 
 		file.setSize(count);
 		List<DBuffer> indirect = new ArrayList<>();
@@ -228,7 +228,7 @@ public class DFSImpl extends DFS {
 				int newBlock = _cache.getNextFreeBlock();
 				_cache.newUsedBlock(newBlock);
 				DBuffer dbuffer = _cache.getBlock(newBlock);
-				System.out.println("Got indirect id "+newBlock);
+				System.out.println("Got indirect id " + newBlock);
 				indirect.add(dbuffer);
 				if (!dbuffer.checkValid()) {
 					dbuffer.startFetch();
@@ -255,28 +255,28 @@ public class DFSImpl extends DFS {
 			}
 		}
 		file.mapFile(indirect, blockIDs);
-		
+
 		DBuffer dbuffer = _cache.getBlock(file.getINodeBlock());
-                if (!dbuffer.checkValid()) {
-                        dbuffer.startFetch();
-                        dbuffer.waitValid();
-                }
+		if (!dbuffer.checkValid()) {
+			dbuffer.startFetch();
+			dbuffer.waitValid();
+		}
 		byte[] metadata = file.getINodeMetadata();
 		byte[] blockData = dbuffer.getBuffer();
-		for(int z=0; z<metadata.length; z++) {
-                    blockData[file.getINodePosition() + z]=metadata[z];
-                }
+		for (int z = 0; z < metadata.length; z++) {
+			blockData[file.getINodePosition() + z] = metadata[z];
+		}
 		dbuffer.write(blockData, 0, Constants.BLOCK_SIZE);
 
 		blockIDs = getMappedBlockIDs(file);
-		System.out.println("New mapped block IDs has size "+blockIDs.size()+" and ids:\n"+blockIDs.toString());
+		System.out.println("New mapped block IDs has size " + blockIDs.size() + " and ids:\n" + blockIDs.toString());
 		int startBlock = (int) Math.floor((double) startOffset / (double) Constants.BLOCK_SIZE);
 		int start = startOffset;
 		int howMany = count;
 		int written = 0;
 		// Actually write now
 		for (int i = startBlock; i < blockIDs.size(); i++) {
-			System.out.println("Requesting direct block "+blockIDs.get(i));
+			System.out.println("Requesting direct block " + blockIDs.get(i));
 			DBuffer d = _cache.getBlock(blockIDs.get(i));
 			if (!d.checkValid()) {
 				d.startFetch();
@@ -287,7 +287,7 @@ public class DFSImpl extends DFS {
 			howMany -= written;
 			start += written;
 		}
-		System.out.println("Written bytes "+(start-startOffset));
+		System.out.println("Written bytes " + (start - startOffset));
 		file = writeInode(file);
 		_fileMap.put(file.getFileId(), file);
 		file.getLock().writeLock().unlock();
@@ -368,7 +368,7 @@ public class DFSImpl extends DFS {
 		for (int i = 0; i < Constants.INODES_IN_BLOCK; i++) {
 			byte[] buffer = new byte[Constants.INODE_SIZE];
 			byte[] integer = new byte[4];
-			if (buf.read(buffer, i * Constants.INODE_SIZE, (i+1)*Constants.INODE_SIZE) == -1)
+			if (buf.read(buffer, i * Constants.INODE_SIZE, (i + 1) * Constants.INODE_SIZE) == -1)
 				continue;
 			else {
 				integer = Arrays.copyOfRange(buffer, Constants.BYTES_PER_INT * Constants.INODE_FID,
@@ -422,7 +422,7 @@ public class DFSImpl extends DFS {
 			for (DFile file : _fileMap.values()) {
 				file.getLock().readLock().lock();
 				for (int i : file.getIndirectBlocks()) {
-				    System.out.println("File has indirect "+i);
+					System.out.println("File has indirect " + i);
 					DBuffer indirectBlock = _cache.getBlock(i);
 					if (!indirectBlock.checkValid()) {
 						indirectBlock.startFetch();
@@ -431,9 +431,10 @@ public class DFSImpl extends DFS {
 					if (i > Constants.NUM_OF_BLOCKS || i < Constants.INODE_REGION_SIZE)
 						throw new IllegalStateException("Invalid block index.");
 					indirectBlock.read(buffer, 0, Constants.BLOCK_SIZE);
-//					if (_cache.containsUsedBlock(i)) {
-//						throw new IllegalStateException("One block should only be mapped by one file.");
-//					}
+					// if (_cache.containsUsedBlock(i)) {
+					// throw new
+					// IllegalStateException("One block should only be mapped by one file.");
+					// }
 					// read datablocks
 					List<Integer> dataBlocks = new ArrayList<>();
 					for (int j = 0; j < Constants.INTS_IN_BLOCK; j++) {
@@ -469,35 +470,36 @@ public class DFSImpl extends DFS {
 			byte[] block = new byte[Constants.BLOCK_SIZE];
 			dbuffer.read(block, 0, Constants.BLOCK_SIZE);
 			byte[] integer = new byte[Constants.BYTES_PER_INT];
-			
-			for (int j = 0; j < Constants.INODES_IN_BLOCK; j++) {
-                            int position = j * Constants.INODE_SIZE;
-                            integer = Arrays.copyOfRange(block, position, position + Constants.BYTES_PER_INT);
-                            
-                            int dfileId = ByteBuffer.wrap(integer).getInt();
-                            //System.out.println("For position "+position+" extracted id "+dfileId);
-                            if (dfileId == file.getFileId()) {
-                                byte[] metadata = Arrays.copyOfRange(block, j * Constants.INODE_SIZE, Constants.INODE_SIZE);
-                                //System.out.println("Found id 0, Creating file");
-                                file.setMetadata(metadata);
-                                    file.setINodeBlock(i);
-                                    file.setINodePosition(j);
-                                    return file;
-                            }
-                    }
-			
+
 			for (int j = 0; j < Constants.INODES_IN_BLOCK; j++) {
 				int position = j * Constants.INODE_SIZE;
 				integer = Arrays.copyOfRange(block, position, position + Constants.BYTES_PER_INT);
-				
+
 				int dfileId = ByteBuffer.wrap(integer).getInt();
-				//System.out.println("For position "+position+" extracted id "+dfileId);
+				// System.out.println("For position "+position+" extracted id "+dfileId);
+				if (dfileId == file.getFileId()) {
+					byte[] metadata = Arrays.copyOfRange(block, j * Constants.INODE_SIZE, (j + 1)
+							* Constants.INODE_SIZE);
+					// System.out.println("Found id 0, Creating file");
+					file.setMetadata(metadata);
+					file.setINodeBlock(i);
+					file.setINodePosition(j);
+					return file;
+				}
+			}
+
+			for (int j = 0; j < Constants.INODES_IN_BLOCK; j++) {
+				int position = j * Constants.INODE_SIZE;
+				integer = Arrays.copyOfRange(block, position, position + Constants.BYTES_PER_INT);
+
+				int dfileId = ByteBuffer.wrap(integer).getInt();
+				// System.out.println("For position "+position+" extracted id "+dfileId);
 				if (dfileId == 0) {
-				    //System.out.println("Found id 0, Creating file");
-				    byte[] size = ByteBuffer.allocate(4).putInt(file.getFileId()).array();
-				    for(int z=0; z<4; z++) {
-				        block[j * Constants.INODE_SIZE+z]=size[z];
-				    }
+					// System.out.println("Found id 0, Creating file");
+					byte[] size = ByteBuffer.allocate(4).putInt(file.getFileId()).array();
+					for (int z = 0; z < 4; z++) {
+						block[j * Constants.INODE_SIZE + z] = size[z];
+					}
 					dbuffer.write(block, 0, Constants.BLOCK_SIZE);
 					file.setINodeBlock(i);
 					file.setINodePosition(j);

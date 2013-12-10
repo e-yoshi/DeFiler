@@ -65,7 +65,40 @@ files. It can be initiated with a format parameter that specifies if the disk sh
 formatted or not. 
 If so, the disk attempts to zero the data from every block, if not, it will scan the 
 inode region and load the existent data.
- 
+
+This class also structures the general structure of the disk.
+Each file has one iNode. Each iNode contains in the following order:
+
+|- Inode -|
+|fileId
+|fileSize
+|indirectBlock 1
+|indirectBlock 2 
+...
+
+An indirectBlock is a block that contains other blockIds as its data. They serve as a table for mapping a file.
+Thus, we have a two-level structure. This allows for mapping files that are large. Although having a lot of space in an inode
+
+
+In order to use the DFS, the following methods are goign to be called:
+1. init()
+2. createDFile()
+3. read()
+4. write()
+5. sizeDFile()
+6. listAllDFiles()
+7. sync()
+
+The details and implementation of the methods above are going to be discussed below.
+
+1.init()
+When initializing the DFS, the program uses a singleton pattern and creates the cache if it exists. 
+Depending on the boolean variable, it will create a formatted or load a previously created file.
+Then it proceeds to check the consistency of the file.
+In order to do that, it 1-Reads Inode region, 2-creates a file map cache, 3-checks consistency of each file.
+-> This DFS checks consistency for uniquely referenced blocks (No data block is part of two file).
+
+
 The create file method simply creates a file and assings an id to it.
 Destroy file erases the data in the file blocks and in its inode. It overwrites
 the metadata and frees the indirect and direct blocks of the file.
