@@ -1,9 +1,16 @@
 DFiler
 
-Henrique Moraes (hrm8)
-Elder Yoshida (emy2)
+/*************************
+ * Team Info & Time spent
+ *************************/
 
-Time spent on project: 18 hours
+	Name1: Henrique Moraes 
+	NetId1: hrm8
+	Time spent: 18 hours  
+
+	Name2: Elder Yoshida
+	NetId2: emy2
+	Time spent: 18 hours 
 
 ======
 
