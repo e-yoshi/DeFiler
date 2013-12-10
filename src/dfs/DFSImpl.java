@@ -476,7 +476,7 @@ public class DFSImpl extends DFS {
                             
                             int dfileId = ByteBuffer.wrap(integer).getInt();
                             if (dfileId == file.getFileId()) {
-                                byte[] metadata = Arrays.copyOfRange(block, j * Constants.INODE_SIZE, Constants.INODE_SIZE);
+                                byte[] metadata = Arrays.copyOfRange(block, j * Constants.INODE_SIZE, (j + 1) * Constants.INODE_SIZE);
                                 file.setMetadata(metadata);
                                     file.setINodeBlock(i);
                                     file.setINodePosition(j);
