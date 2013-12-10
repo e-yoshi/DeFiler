@@ -1,4 +1,10 @@
 DFiler
+
+Henrique Moraes (hrm8)
+Elder Yoshida (emy2)
+
+Time spent on project: 18 hours
+
 ======
 
 Virtual file system implementation
