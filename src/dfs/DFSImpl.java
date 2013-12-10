@@ -385,7 +385,7 @@ public class DFSImpl extends DFS {
 						Constants.BYTES_PER_INT * (Constants.INODE_FILE_SIZE + 1));
 				int fileSize = ByteBuffer.wrap(integer).getInt();
 				List<Integer> indirectBlocks = new ArrayList<>();
-				for (int j = Constants.POSITION_INDIRECT_BLOCK_REGION; j < (Constants.INODE_SIZE / Constants.BYTES_PER_INT); j++) {
+				for (int j = Constants.POSITION_INDIRECT_BLOCK_REGION; j < 4; j++) {
 					integer = Arrays
 							.copyOfRange(buffer, Constants.BYTES_PER_INT * j, Constants.BYTES_PER_INT * (j + 1));
 					int indBlock = ByteBuffer.wrap(integer).getInt();

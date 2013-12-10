@@ -77,10 +77,10 @@ Each file has one iNode. Each iNode contains in the following order:
 ...
 
 An indirectBlock is a block that contains other blockIds as its data. They serve as a table for mapping a file.
-Thus, we have a two-level structure. This allows for mapping files that are large. Although having a lot of space in an inode
+Thus, we have a two-level structure. This allows for mapping files that are large. Although having a lot of space in an inode, we just need to use two indirect blocks to map a file of maximmum size. More metadata could be stored in the inode.
 
 
-In order to use the DFS, the following methods are goign to be called:
+In order to use the DFS, the following methods are going to be called:
 1. init()
 2. createDFile()
 3. read()
@@ -97,7 +97,9 @@ Depending on the boolean variable, it will create a formatted or load a previous
 Then it proceeds to check the consistency of the file.
 In order to do that, it 1-Reads Inode region, 2-creates a file map cache, 3-checks consistency of each file.
 -> This DFS checks consistency for uniquely referenced blocks (No data block is part of two file).
-
+-> Checks if the fileId has a valid numeber
+-> Checks if the blockIds in the indirect blocks are a valid number
+-> Checks what are the used blocks in the file.
 
 The create file method simply creates a file and assings an id to it.
 Destroy file erases the data in the file blocks and in its inode. It overwrites
