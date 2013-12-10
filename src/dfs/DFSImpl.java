@@ -175,13 +175,6 @@ public class DFSImpl extends DFS {
 				dbuffer.startFetch();
 				dbuffer.waitValid();
 			}
-			ByteBuffer bytes = ByteBuffer.wrap(dbuffer.getBuffer());
-                      IntBuffer ints = bytes.asIntBuffer();
-                      System.out.println("elements in dbuffer: ");
-                      while(ints.hasRemaining()){
-                          System.out.print(" "+ints.get());
-                      }
-                      System.out.println("");
 	
 			int read = dbuffer.read(buffer, start, howMany);
 			howMany -= read;
