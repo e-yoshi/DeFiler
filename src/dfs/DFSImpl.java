@@ -225,7 +225,6 @@ public class DFSImpl extends DFS {
 		List<DBuffer> indirect = new ArrayList<>();
 		if (!file.isMapped()) {
 			for (int i = 0; i < file.getNumIndirectBlocks(); i++) {
-			    
 				int newBlock = _cache.getNextFreeBlock();
 				_cache.newUsedBlock(newBlock);
 				DBuffer dbuffer = _cache.getBlock(newBlock);
@@ -256,6 +255,18 @@ public class DFSImpl extends DFS {
 			}
 		}
 		file.mapFile(indirect, blockIDs);
+		
+		DBuffer dbuffer = _cache.getBlock(file.getINodeBlock());
+                if (!dbuffer.checkValid()) {
+                        dbuffer.startFetch();
+                        dbuffer.waitValid();
+                }
+		byte[] metadata = file.getINodeMetadata();
+		byte[] blockData = dbuffer.getBuffer();
+		for(int z=0; z<metadata.length; z++) {
+                    blockData[file.getINodePosition() + z]=metadata[z];
+                }
+		dbuffer.write(blockData, 0, Constants.BLOCK_SIZE);
 
 		blockIDs = getMappedBlockIDs(file);
 		System.out.println("New mapped block IDs has size "+blockIDs.size()+" and ids:\n"+blockIDs.toString());
@@ -461,7 +472,6 @@ public class DFSImpl extends DFS {
 			for (int j = 0; j < Constants.INODES_IN_BLOCK; j++) {
                             int position = j * Constants.INODE_SIZE;
                             integer = Arrays.copyOfRange(block, position, position + Constants.BYTES_PER_INT);
-                            
                             
                             int dfileId = ByteBuffer.wrap(integer).getInt();
                             //System.out.println("For position "+position+" extracted id "+dfileId);
