@@ -154,4 +154,10 @@ While there is an object inside the queue, it will execute the operations.
 Testing
 
 Testing was done focusing on firstly getting every core method right.
+The first test creates multiple files then deletes all them then we check if there are any remaining files.
+The sencond test tests if text can be saved to the disk.
+Then we porceeded to stress test the program, creating multiple concurrent reads and writes.
+In order to test concurrency, we modified the code so that all writes woudl never relese the lock. That being done, we figured that all reads were stopped, confiming the success of the multithreading.
+
+Thank you!
 
