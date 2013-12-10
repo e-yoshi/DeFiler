@@ -83,10 +83,10 @@ Each file has one iNode. Each iNode contains in the following order:
 ...
 
 An indirectBlock is a block that contains other blockIds as its data. They serve as a table for mapping a file.
-Thus, we have a two-level structure. This allows for mapping files that are large. Although having a lot of space in an inode
+Thus, we have a two-level structure. This allows for mapping files that are large. Although having a lot of space in an inode, we just need to use two indirect blocks to map a file of maximmum size. More metadata could be stored in the inode.
 
 
-In order to use the DFS, the following methods are goign to be called:
+In order to use the DFS, the following methods are going to be called:
 1. init()
 2. createDFile()
 3. read()
@@ -97,27 +97,24 @@ In order to use the DFS, the following methods are goign to be called:
 
 The details and implementation of the methods above are going to be discussed below.
 
-1. init()
+1.init()
 When initializing the DFS, the program uses a singleton pattern and creates the cache if it exists. 
 Depending on the boolean variable, it will create a formatted or load a previously created file.
 Then it proceeds to check the consistency of the file.
 In order to do that, it 1-Reads Inode region, 2-creates a file map cache, 3-checks consistency of each file.
 -> This DFS checks consistency for uniquely referenced blocks (No data block is part of two file).
--> Checks for validity of range of blockId, fileId
--> Checks for uniqueness of fileId
--> Checks for uniquenes of indirect blocks
+-> Checks if the fileId has a valid numeber
+-> Checks if the blockIds in the indirect blocks are a valid number
+-> Checks what are the used blocks in the file.
 
-2. createFile()
 The create file method simply creates a file and assings an id to it.
 Destroy file erases the data in the file blocks and in its inode. It overwrites
 the metadata and frees the indirect and direct blocks of the file.
  
-3. read()
 readFile retrieves the file with the correct id and locks it for reading,
 gets the mapped block ids from the file, and then loops for the appropriate amount
 of iterations to read from the debuff requested to the cache. Finally, it releases the lock
   
-4. write()
 write file gets the file and the lock, and first calculates the discrepancy between write size and
 file size. It allocates or deallocates the required number of blocks, and initializes and maps 
 the metadata in case it is the first write to the file. Finally, it feteches the appropriate blocks 
@@ -135,7 +132,9 @@ But we chose it this way to not defy the purposes of the assignment
 
 Synchronization
 
-The synchronization was done via two different methods. One is a simple filemap that works as a 
+The synchronization that protects the files is done using a convinient lock provided in the concurrent java package.
+It is a ReentrantReadWriteLock, allowing for better control of starvation scenario.
+
 
 ===========================================
 
@@ -146,4 +145,13 @@ to the disk, the disk places the buffer in a queue which is processed on another
 Once this thread has an empty queue, it will wait until a new dbuffer comes. Also, it contains
 a wrapper class called request, that contains the DBuffer and the operation type 
 required for processing. Once a DBuffer is popped out of the queue, it makes a read from 
-or write to a random access file depending on the operation type that should be done
+or write to a random access file depending on the operation type that should be done.
+
+The virtual disk synchronization uses a queue of operations and the disk is itself a thread.
+While there is an object inside the queue, it will execute the operations.
+
+===========================================
+Testing
+
+Testing was done focusing on firstly getting every core method right.
+
