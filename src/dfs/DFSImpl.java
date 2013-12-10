@@ -414,7 +414,7 @@ public class DFSImpl extends DFS {
 	 */
 	private void checkFileConsistency() {
 		synchronized (_fileMap) {
-			byte[] buffer = new byte[32];
+			byte[] buffer = new byte[Constants.BLOCK_SIZE];
 			byte[] integer = new byte[4];
 
 			if (_fileMap.isEmpty())
@@ -422,6 +422,7 @@ public class DFSImpl extends DFS {
 			for (DFile file : _fileMap.values()) {
 				file.getLock().readLock().lock();
 				for (int i : file.getIndirectBlocks()) {
+				    System.out.println("File has indirect "+i);
 					DBuffer indirectBlock = _cache.getBlock(i);
 					if (!indirectBlock.checkValid()) {
 						indirectBlock.startFetch();
@@ -430,9 +431,9 @@ public class DFSImpl extends DFS {
 					if (i > Constants.NUM_OF_BLOCKS || i < Constants.INODE_REGION_SIZE)
 						throw new IllegalStateException("Invalid block index.");
 					indirectBlock.read(buffer, 0, Constants.BLOCK_SIZE);
-					if (_cache.containsUsedBlock(i)) {
-						throw new IllegalStateException("One block should only be mapped by one file.");
-					}
+//					if (_cache.containsUsedBlock(i)) {
+//						throw new IllegalStateException("One block should only be mapped by one file.");
+//					}
 					// read datablocks
 					List<Integer> dataBlocks = new ArrayList<>();
 					for (int j = 0; j < Constants.INTS_IN_BLOCK; j++) {
