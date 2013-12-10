@@ -475,10 +475,8 @@ public class DFSImpl extends DFS {
                             integer = Arrays.copyOfRange(block, position, position + Constants.BYTES_PER_INT);
                             
                             int dfileId = ByteBuffer.wrap(integer).getInt();
-                            //System.out.println("For position "+position+" extracted id "+dfileId);
                             if (dfileId == file.getFileId()) {
                                 byte[] metadata = Arrays.copyOfRange(block, j * Constants.INODE_SIZE, Constants.INODE_SIZE);
-                                //System.out.println("Found id 0, Creating file");
                                 file.setMetadata(metadata);
                                     file.setINodeBlock(i);
                                     file.setINodePosition(j);
@@ -488,12 +486,9 @@ public class DFSImpl extends DFS {
 			
 			for (int j = 0; j < Constants.INODES_IN_BLOCK; j++) {
 				int position = j * Constants.INODE_SIZE;
-				integer = Arrays.copyOfRange(block, position, position + Constants.BYTES_PER_INT);
-				
+				integer = Arrays.copyOfRange(block, position, position + Constants.BYTES_PER_INT);	
 				int dfileId = ByteBuffer.wrap(integer).getInt();
-				//System.out.println("For position "+position+" extracted id "+dfileId);
 				if (dfileId == 0) {
-				    //System.out.println("Found id 0, Creating file");
 				    byte[] size = ByteBuffer.allocate(4).putInt(file.getFileId()).array();
 				    for(int z=0; z<4; z++) {
 				        block[j * Constants.INODE_SIZE+z]=size[z];
